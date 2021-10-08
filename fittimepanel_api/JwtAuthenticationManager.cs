@@ -5,10 +5,10 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using fittimepanel_api.Controllers;
+using FittimePanelApi.Controllers;
 using Microsoft.IdentityModel.Tokens;
 
-namespace fittimepanel_api
+namespace FittimePanelApi
 {
     public class JwtAuthenticationManager : IJwtAuthenticationManager
     {

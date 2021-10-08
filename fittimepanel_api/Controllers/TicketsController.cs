@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using fittimepanel_api;
-using fittimepanel_api.Models;
+using FittimePanelApi;
+using FittimePanelApi.Models;
 
-namespace fittimepanel_api.Controllers
+namespace FittimePanelApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

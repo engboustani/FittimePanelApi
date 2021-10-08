@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace fittimepanel_api.Controllers
+namespace FittimePanelApi.Controllers
 {
     [Authorize]
     [ApiController]

@@ -5,10 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using fittimepanel_api.Models;
+using FittimePanelApi.Models;
 using System.Text.RegularExpressions;
 
-namespace fittimepanel_api.Controllers
+namespace FittimePanelApi.Controllers
 {
     [Authorize]
     [Route("api/[controller]")]

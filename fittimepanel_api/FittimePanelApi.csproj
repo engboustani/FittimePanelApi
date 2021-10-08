@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <UserSecretsId>aspnet-fittimepanel_api-E847BC0A-69B5-4AE8-B859-641DD6FD284D</UserSecretsId>
-    <RootNamespace>fittimepanel_api</RootNamespace>
+    <RootNamespace>FittimePanelApi</RootNamespace>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 

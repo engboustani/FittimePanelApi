@@ -18,7 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace fittimepanel_api
+namespace FittimePanelApi
 {
     public class Startup
     {

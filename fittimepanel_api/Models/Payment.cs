@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace fittimepanel_api.Models
+namespace FittimePanelApi.Models
 {
     public class Payment : BaseEntity
     {

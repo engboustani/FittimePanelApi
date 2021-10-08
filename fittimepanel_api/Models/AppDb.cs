@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using fittimepanel_api.Models;
+using FittimePanelApi.Models;
 using System.Threading;
 
-namespace fittimepanel_api
+namespace FittimePanelApi
 {
     public class AppDb : DbContext
     {

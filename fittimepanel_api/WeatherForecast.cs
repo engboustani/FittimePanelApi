@@ -1,6 +1,6 @@
 using System;
 
-namespace fittimepanel_api
+namespace FittimePanelApi
 {
     public class WeatherForecast
     {
