@@ -1,0 +1,24 @@
+kind: ExternalService
+name: fittimepanel-api
+spec:
+  image_pull_policy: Always
+  port: 80
+  source:
+    context: .
+    dll_name: fittimepanel-api.dll
+    dotnet_version: '5.0'
+    project_type: aspnet
+  env:
+    - name: DB_ADDRESS
+      value: fittimepanel-db
+    - name: DB_NAME
+      value: fittimepanel
+    - name: DB_USER
+      value: root
+    - name: DB_PASSWORD
+      value: hboo1375
+  command:
+    - dotnet
+    - ef
+    - database
+    - update
