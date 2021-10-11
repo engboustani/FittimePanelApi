@@ -1,3 +1,5 @@
+using FittimePanelApi.Configuration;
+using FittimePanelApi.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -67,6 +69,8 @@ namespace FittimePanelApi
                     p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
                 );
             });
+
+            services.AddAutoMapper(typeof(MapperInitilizer));
 
             services.AddSwaggerGen(c =>
             {

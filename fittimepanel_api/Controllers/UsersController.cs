@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FittimePanelApi;
-using FittimePanelApi.Models;
+using FittimePanelApi.Data;
 
 namespace FittimePanelApi.Controllers
 {

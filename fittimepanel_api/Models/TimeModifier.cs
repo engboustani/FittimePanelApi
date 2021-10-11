@@ -5,15 +5,10 @@ using System.Threading.Tasks;
 
 namespace FittimePanelApi.Models
 {
-    public class BaseEntity
+    public class TimeModifier
     {
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
-    }
 
-    public class ErrorResponse
-    {
-        public int Code { get; set; }
-        public string Message { get; set; }
     }
 }

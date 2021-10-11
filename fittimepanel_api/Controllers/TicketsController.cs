@@ -6,13 +6,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FittimePanelApi;
-using FittimePanelApi.Models;
+using FittimePanelApi.Data;
+using FittimePanelApi.IControllers;
 
 namespace FittimePanelApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TicketsController : ControllerBase
+    public class TicketsController : ControllerBase, ITicketsController
     {
         private readonly AppDb _context;
 
@@ -23,14 +24,14 @@ namespace FittimePanelApi.Controllers
 
         // GET: api/Tickets
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Ticket>>> GetTickets()
+        public async Task<ActionResult<IEnumerable<Ticket>>> ReadAll()
         {
             return await _context.Tickets.ToListAsync();
         }
 
         // GET: api/Tickets/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Ticket>> GetTicket(Guid id)
+        public async Task<ActionResult<Ticket>> ReadById(Guid id)
         {
             var ticket = await _context.Tickets
                 .Include(t => t.TicketMessages)
@@ -50,9 +51,10 @@ namespace FittimePanelApi.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTicket(Guid id, TicketNewResponse _ticket)
+        public async Task<IActionResult> Update(Guid id, object newData)
         {
             Ticket ticket = _context.Tickets.Find(id);
+            TicketNewResponse _ticket = (TicketNewResponse)newData;
 
             if (id != ticket.Id)
             {
@@ -75,7 +77,7 @@ namespace FittimePanelApi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!TicketExists(id))
+                if (!Exist(id))
                 {
                     return NotFound();
                 }
@@ -92,8 +94,10 @@ namespace FittimePanelApi.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost]
-        public async Task<ActionResult<Ticket>> PostTicket(TicketNew _ticket)
+        public async Task<ActionResult<Ticket>> New(object data)
         {
+            TicketNew _ticket = (TicketNew)data;
+
             Ticket ticket = new Ticket()
             {
                 Title = _ticket.Title,
@@ -118,7 +122,7 @@ namespace FittimePanelApi.Controllers
 
         // DELETE: api/Tickets/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Ticket>> DeleteTicket(int id)
+        public async Task<ActionResult<Ticket>> DeleteById(Guid id)
         {
             var ticket = await _context.Tickets.FindAsync(id);
             if (ticket == null)
@@ -132,9 +136,10 @@ namespace FittimePanelApi.Controllers
             return ticket;
         }
 
-        private bool TicketExists(Guid id)
+        public bool Exist(Guid id)
         {
             return _context.Tickets.Any(e => e.Id == id);
         }
+
     }
 }

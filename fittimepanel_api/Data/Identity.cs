@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace FittimePanelApi.Models
+namespace FittimePanelApi.Data
 {
 	public class AppIdentityUser : IdentityUser
 	{

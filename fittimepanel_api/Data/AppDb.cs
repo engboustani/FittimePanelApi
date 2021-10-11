@@ -3,13 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FittimePanelApi.Models;
+using FittimePanelApi.Data;
 using System.Threading;
 
-namespace FittimePanelApi
+namespace FittimePanelApi.Data
 {
     public class AppDb : DbContext
     {
+        public AppDb(DbContextOptions<AppDb> options) : base(options)
+        {
+
+        }
+
         // Users
         public DbSet<User> Users { get; set; }
         public DbSet<UserMeta> UserMetas { get; set; }
@@ -40,12 +45,6 @@ namespace FittimePanelApi
         //    modelBuilder.Entity<Ticket>().HasMany(t => t.TicketStatuses).WithOne(ts => ts.Ticket);
 
         //}
-
-        public AppDb(DbContextOptions<AppDb> options) : base(options)
-        {
-
-        }
-
         public override int SaveChanges()
         {
             var entries = ChangeTracker
