@@ -7,7 +7,10 @@ using System.Threading.Tasks;
 
 namespace FittimePanelApi.IControllers
 {
-    public interface ITicketsController:IController<Ticket>
+    public interface ITicketsController
     {
+        public Task<ActionResult<IEnumerable<Ticket>>> ReadAll();
+        public Task<ActionResult<Ticket>> ReadById(Guid id);
+
     }
 }

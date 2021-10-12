@@ -27,9 +27,9 @@ namespace FittimePanelApi
                 Log.Information("Service is starting...");
                 CreateHostBuilder(args).Build().Run();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Log.Error(e, "Something happened in start");
+                Log.Error(ex, "Something happened in start");
                 throw;
             }
             finally

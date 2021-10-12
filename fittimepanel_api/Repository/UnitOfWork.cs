@@ -16,7 +16,7 @@ namespace FittimePanelApi.Repository
         {
             _context = context;
         }
-        public IGenericRepository<Ticket> Countries => _tickets ??= new GenericRepository<Ticket>(_context);
+        public IGenericRepository<Ticket> Tickets => _tickets ??= new GenericRepository<Ticket>(_context);
 
         public void Dispose()
         {

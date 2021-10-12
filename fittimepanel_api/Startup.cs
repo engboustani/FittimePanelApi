@@ -1,5 +1,7 @@
 using FittimePanelApi.Configuration;
 using FittimePanelApi.Data;
+using FittimePanelApi.IRepository;
+using FittimePanelApi.Repository;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -71,6 +73,8 @@ namespace FittimePanelApi
             });
 
             services.AddAutoMapper(typeof(MapperInitilizer));
+
+            services.AddTransient<IUnitOfWork, UnitOfWork>();
 
             services.AddSwaggerGen(c =>
             {
