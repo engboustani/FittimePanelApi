@@ -12,6 +12,8 @@ namespace FittimePanelApi.Configuration
     {
         public MapperInitilizer()
         {
+            CreateMap<User, UserDTO>().ReverseMap();
+            CreateMap<User, LoginUserDTO>().ReverseMap();
             CreateMap<Ticket, TicketDTO>().ReverseMap();
             CreateMap<Ticket, CreateTicketDTO>().ReverseMap();
             CreateMap<TicketMessage, TicketMessageDTO>().ReverseMap();

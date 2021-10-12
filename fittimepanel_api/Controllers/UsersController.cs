@@ -21,128 +21,128 @@ namespace FittimePanelApi.Controllers
             _context = context;
         }
 
-        // GET: api/Users
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
-        {
-            return await _context.Users.ToListAsync();
-        }
+        //// GET: api/Users
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        //{
+        //    return await _context.Users.ToListAsync();
+        //}
 
-        // GET: api/Users/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
+        //// GET: api/Users/5
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<User>> GetUser(int id)
+        //{
+        //    var user = await _context.Users.FindAsync(id);
 
-            if (user == null)
-            {
-                return NotFound();
-            }
+        //    if (user == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return user;
-        }
+        //    return user;
+        //}
 
-        // PUT: api/Users/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(Guid id, User user)
-        {
-            if (id != user.Id)
-            {
-                return BadRequest();
-            }
+        //// PUT: api/Users/5
+        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        //[HttpPut("{id}")]
+        //public async Task<IActionResult> PutUser(Guid id, User user)
+        //{
+        //    if (id != user.Id)
+        //    {
+        //        return BadRequest();
+        //    }
 
-            _context.Entry(user).State = EntityState.Modified;
+        //    _context.Entry(user).State = EntityState.Modified;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!UserExists(id))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
 
-            return NoContent();
-        }
+        //    return NoContent();
+        //}
 
-        // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
-        {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+        //// POST: api/Users
+        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        //[HttpPost]
+        //public async Task<ActionResult<User>> PostUser(User user)
+        //{
+        //    _context.Users.Add(user);
+        //    await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
-        }
+        //    return CreatedAtAction("GetUser", new { id = user.Id }, user);
+        //}
 
-        // DELETE: api/Users/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+        //// DELETE: api/Users/5
+        //[HttpDelete("{id}")]
+        //public async Task<IActionResult> DeleteUser(int id)
+        //{
+        //    var user = await _context.Users.FindAsync(id);
+        //    if (user == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+        //    _context.Users.Remove(user);
+        //    await _context.SaveChangesAsync();
 
-            return NoContent();
-        }
+        //    return NoContent();
+        //}
 
-        private bool UserExists(Guid id)
-        {
-            return _context.Users.Any(e => e.Id == id);
-        }
+        //private bool UserExists(Guid id)
+        //{
+        //    return _context.Users.Any(e => e.Id == id);
+        //}
 
-        private bool UsernameAndPasswordExists(string username, string password)
-        {
-            return _context.Users.Any(u => u.Username == username && u.Password == password);
-        }
+        //private bool UsernameAndPasswordExists(string username, string password)
+        //{
+        //    return _context.Users.Any(u => u.Username == username && u.Password == password);
+        //}
 
-        // POST: api/Users/Rules
-        [HttpPost("Rules")]
-        public async Task<ActionResult<UserRule>> PostRule(UserRule rule)
-        {
-            _context.UserRules.Add(rule);
-            await _context.SaveChangesAsync();
+        //// POST: api/Users/Rules
+        //[HttpPost("Rules")]
+        //public async Task<ActionResult<UserRule>> PostRule(UserRule rule)
+        //{
+        //    _context.UserRules.Add(rule);
+        //    await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUserRule", new { id = rule.Id }, rule);
-        }
+        //    return CreatedAtAction("GetUserRule", new { id = rule.Id }, rule);
+        //}
 
-        // GET: api/Users/Groups/5
-        [HttpGet("Groups/{id}")]
-        public async Task<ActionResult<UserGroup>> GetGroup(int id)
-        {
-            var userGroup = await _context.UserGroups.FindAsync(id);
+        //// GET: api/Users/Groups/5
+        //[HttpGet("Groups/{id}")]
+        //public async Task<ActionResult<UserGroup>> GetGroup(int id)
+        //{
+        //    var userGroup = await _context.UserGroups.FindAsync(id);
 
-            if (userGroup == null)
-            {
-                return NotFound();
-            }
+        //    if (userGroup == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return userGroup;
-        }
+        //    return userGroup;
+        //}
 
-        // POST: api/Users/Groups
-        [HttpPost("Groups")]
-        public async Task<ActionResult<UserGroup>> PostGroup(UserGroup group)
-        {
-            _context.UserGroups.Add(group);
-            await _context.SaveChangesAsync();
+        //// POST: api/Users/Groups
+        //[HttpPost("Groups")]
+        //public async Task<ActionResult<UserGroup>> PostGroup(UserGroup group)
+        //{
+        //    _context.UserGroups.Add(group);
+        //    await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetGroup", new { id = group.Id }, group);
-        }
+        //    return CreatedAtAction("GetGroup", new { id = group.Id }, group);
+        //}
 
     }
 }

@@ -5,18 +5,26 @@ using System.Linq;
 using System.Threading.Tasks;
 using FittimePanelApi.Data;
 using System.Threading;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using FittimePanelApi.Configuration.Entities;
 
 namespace FittimePanelApi.Data
 {
-    public class AppDb : DbContext
+    public class AppDb : IdentityDbContext<User>
     {
         public AppDb(DbContextOptions<AppDb> options) : base(options)
         {
 
         }
 
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder.ApplyConfiguration(new RoleConfiguration());
+        }
+
         // Users
-        public DbSet<User> Users { get; set; }
         public DbSet<UserMeta> UserMetas { get; set; }
         public DbSet<UserGroup> UserGroups { get; set; }
         public DbSet<UserRule> UserRules { get; set; }

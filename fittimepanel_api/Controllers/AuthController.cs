@@ -7,122 +7,99 @@ using System.Linq;
 using System.Threading.Tasks;
 using FittimePanelApi.Data;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using AutoMapper;
+using FittimePanelApi.Models;
+using FittimePanelApi.Services;
 
 namespace FittimePanelApi.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IJwtAuthenticationManager _jwtAuthenticationManager;
-        private readonly AppDb _context;
+        private readonly UserManager<User> _userManager;
+        private readonly ILogger<AuthController> _logger;
+        private readonly IMapper _mapper;
+        private readonly IAuthManager _authManager;
 
-        public AuthController(IJwtAuthenticationManager jwtAuthenticationManager, AppDb context)
+
+        public AuthController(UserManager<User> userManager,
+            ILogger<AuthController> logger,
+            IMapper mapper,
+            IAuthManager authManager)
         {
-            _jwtAuthenticationManager = jwtAuthenticationManager;
-            _context = context;
+            _userManager = userManager;
+            _logger = logger;
+            _mapper = mapper;
+            _authManager = authManager;
         }
 
-        [AllowAnonymous]
-        [HttpPost("signup")]
-        public async Task<IActionResult> Registration([FromBody] UserRegister user)
+        [HttpPost]
+        [Route("register")]
+        [ProducesResponseType(StatusCodes.Status202Accepted)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Register([FromBody] UserDTO userDTO)
         {
-            // validation
-            if (!(user.Username.Length > 0))
-                return BadRequest(new ErrorResponse
-                {
-                    Code = 100,
-                    Message = "کد ملی درست وارد نشده است"
-                });
-            else
+            _logger.LogInformation($"Registration Attempt for {userDTO.Email} ");
+            if (!ModelState.IsValid)
             {
-                user.Username = ConvertPersianNumberToEnglish(user.Username);
-                if(!CheckCodeMelli(user.Username))
-                    return BadRequest(new ErrorResponse
-                    {
-                        Code = 101,
-                        Message = "کد ملی معتبر نمی باشد"
-                    });
+                return BadRequest(ModelState);
             }
-            if (!(user.Firstname.Length > 0))
-                return BadRequest(new ErrorResponse
-                {
-                    Code = 110,
-                    Message = "نام درست وارد نشده است"
-                });
-            if (!(user.Lastname.Length > 0))
-                return BadRequest(new ErrorResponse
-                {
-                    Code = 120,
-                    Message = "نام خانوادگی درست وارد نشده است"
-                });
-            if (!(user.Password.Length > 0))
-                return BadRequest(new ErrorResponse
-                {
-                    Code = 130,
-                    Message = "رمز عبور درست وارد نشده است"
-                });
-            user.Mobile = ConvertPersianNumberToEnglish(user.Mobile);
-            if (!Regex.Match(user.Mobile, @"(\+98|0)?9\d{9}").Success) //check if phone number is persian number
-                return BadRequest(new ErrorResponse
-                {
-                    Code = 140,
-                    Message = "شماره همراه درست وارد نشده است"
-                });
 
             try
             {
-                UserGroup userGroup = _context.UserGroups.Find(2);
-                User newUser = new()
+                var user = _mapper.Map<User>(userDTO);
+                user.UserName = userDTO.PhoneNumber;
+                var result = await _userManager.CreateAsync(user, userDTO.Password);
+
+                if (!result.Succeeded)
                 {
-                    Username = user.Username,
-                    Firstname = user.Firstname,
-                    Lastname = user.Lastname,
-                    Password = user.Password,
-                    Mobile = user.Mobile,
-                    UserGroup = userGroup,
-                };
-                _context.Users.Add(newUser);
-                await _context.SaveChangesAsync();
-
-                return CreatedAtAction("GetUser", new { id = newUser.Id }, newUser);
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(error.Code, error.Description);
+                    }
+                    return BadRequest(ModelState);
+                }
+                await _userManager.AddToRolesAsync(user, userDTO.Roles);
+                return Accepted();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return Problem("ساخت کاربر با مشکل مواجه شد");
-                throw;
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(Register)}");
+                return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
             }
         }
 
-        [AllowAnonymous]
-        [HttpPost("signin")]
-        public IActionResult Authenticate([FromBody] UserLogin user)
+        [HttpPost]
+        [Route("login")]
+        public async Task<IActionResult> Login([FromBody] LoginUserDTO userDTO)
         {
-            bool validate = CheckUsernameAndPassword(user);
-            var token = _jwtAuthenticationManager.Authenticate(validate, user.Username);
-            if (token == null)
-                return Unauthorized();
-            return Ok(token);
-        }
-
-        // GET: api/Users/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
-
-            if (user == null)
+            _logger.LogInformation($"Login Attempt for {userDTO.PhoneNumber} ");
+            if (!ModelState.IsValid)
             {
-                return NotFound();
+                return BadRequest(ModelState);
             }
 
-            return user;
+            try
+            {
+                if (!await _authManager.ValidateUser(userDTO))
+                {
+                    return Unauthorized();
+                }
+
+                return Accepted(new { Token = await _authManager.CreateToken() });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(Login)}");
+                return Problem($"Something Went Wrong in the {nameof(Login)}", statusCode: 500);
+            }
         }
-        private bool CheckUsernameAndPassword(UserLogin user)
-        {
-            return _context.Users.Any(u => u.Username == user.Username && u.Password == user.Password);
-        }
+
+
         private static string ConvertPersianNumberToEnglish(string input)
         {
             string EnglishNumbers = "";

@@ -4,24 +4,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
 
 namespace FittimePanelApi.Data
 {
-    public class User : BaseEntity
+    public class User : IdentityUser
     {
         public User()
         {
             UserMetas = new HashSet<UserMeta>();
         }
-
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Key]
-        public Guid Id { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string Firstname { get; set; }
-        public string Lastname { get; set; }
-        public string Mobile { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
         public virtual ICollection<UserMeta> UserMetas { get; set; }
         public virtual UserGroup UserGroup { get; set; }
         //public bool MobileVerified { get; set; }

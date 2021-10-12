@@ -2,11 +2,13 @@ using FittimePanelApi.Configuration;
 using FittimePanelApi.Data;
 using FittimePanelApi.IRepository;
 using FittimePanelApi.Repository;
+using FittimePanelApi.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -42,26 +44,9 @@ namespace FittimePanelApi
             }
             );
 
-            var key = "test key for fittime panel";
-
-            services.AddAuthentication(x =>
-            {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(x =>
-            {
-                x.RequireHttpsMetadata = false;
-                x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
-            });
-
-            services.AddSingleton<IJwtAuthenticationManager>(new JwtAuthenticationManager(key));
+            services.AddAuthentication();
+            services.ConfigureIdentity();
+            services.ConfigureJWT(Configuration);
 
             services.AddControllers();
 
@@ -75,6 +60,7 @@ namespace FittimePanelApi
             services.AddAutoMapper(typeof(MapperInitilizer));
 
             services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IAuthManager, AuthManager>();
 
             services.AddSwaggerGen(c =>
             {

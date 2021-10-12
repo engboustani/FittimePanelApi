@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FittimePanelApi.Migrations
 {
     [DbContext(typeof(AppDb))]
-    [Migration("20211012090147_init")]
+    [Migration("20211012095652_init")]
     partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,11 +37,11 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid?>("UserInstructorId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserInstructorId")
+                        .HasColumnType("varchar(255)");
 
-                    b.Property<Guid?>("UserStudentId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserStudentId")
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
@@ -99,8 +99,8 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Value")
                         .HasColumnType("longtext");
@@ -178,8 +178,8 @@ namespace FittimePanelApi.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("UserId1")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId1")
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
@@ -275,11 +275,11 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid?>("UserAnsweredId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserAnsweredId")
+                        .HasColumnType("varchar(255)");
 
-                    b.Property<Guid?>("UserCreatedId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserCreatedId")
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
@@ -308,8 +308,8 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
@@ -350,39 +350,77 @@ namespace FittimePanelApi.Migrations
 
             modelBuilder.Entity("FittimePanelApi.Data.User", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Firstname")
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("PasswordHash")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Lastname")
+                    b.Property<string>("PhoneNumber")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Mobile")
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("SecurityStamp")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Password")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime(6)");
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int?>("UserGroupId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Username")
-                        .HasColumnType("longtext");
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
                     b.HasIndex("UserGroupId");
 
-                    b.ToTable("Users");
+                    b.ToTable("AspNetUsers");
                 });
 
             modelBuilder.Entity("FittimePanelApi.Data.UserGroup", b =>
@@ -420,8 +458,8 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Value")
                         .HasColumnType("longtext");
@@ -456,6 +494,134 @@ namespace FittimePanelApi.Migrations
                     b.HasIndex("UserGroupId");
 
                     b.ToTable("UserRules");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens");
                 });
 
             modelBuilder.Entity("FittimePanelApi.Data.Exercise", b =>
@@ -599,6 +765,57 @@ namespace FittimePanelApi.Migrations
                         .HasForeignKey("UserGroupId");
 
                     b.Navigation("UserGroup");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("FittimePanelApi.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("FittimePanelApi.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FittimePanelApi.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("FittimePanelApi.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("FittimePanelApi.Data.Exercise", b =>
