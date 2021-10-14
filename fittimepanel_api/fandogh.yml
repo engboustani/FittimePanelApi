@@ -17,6 +17,8 @@ spec:
       value: root
     - name: DB_PASSWORD
       value: hboo1375
+    - name: KEY
+      value: 51d4b650-c888-40d3-9308-0e393d2f3166
   command:
     - dotnet
     - ef

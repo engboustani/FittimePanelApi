@@ -9,6 +9,7 @@ namespace FittimePanelApi.IRepository
     public interface IUnitOfWork : IDisposable
     {
         IGenericRepository<Ticket> Tickets { get; }
+        IGenericRepository<Exercise> Exercises { get; }
         Task Save();
     }
 }

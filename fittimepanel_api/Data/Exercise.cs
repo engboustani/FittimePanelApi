@@ -9,6 +9,16 @@ namespace FittimePanelApi.Data
 {
     public class Exercise : BaseEntity
     {
+        public enum ExerciseStatus : int
+        {
+            Requested = 0,
+            GoesForPay = 1,
+            Paid = 2,
+            InProcess = 3,
+            Completed = 4,
+            ReProcess = 5
+        }
+
         public Exercise()
         {
             ExerciseMetas = new HashSet<ExerciseMeta>();
@@ -22,7 +32,7 @@ namespace FittimePanelApi.Data
         public virtual User UserInstructor { get; set; }
         public virtual ExerciseType ExerciseType { get; set; }
         public virtual ICollection<ExerciseMeta> ExerciseMetas { get; set; }
-        public virtual ExerciseStatus ExerciseStatus { get; set; }
+        public virtual ExerciseStatus Status { get; set; }
         public virtual ICollection<ExerciseDownload> ExerciseDownloads { get; set; }
     }
 
@@ -36,19 +46,13 @@ namespace FittimePanelApi.Data
     public class ExerciseMeta : BaseEntity
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Key { get; set; }
         public string Value { get; set; }
         public virtual User User { get; set; }
         public virtual Exercise Exercise { get; set; }
     }
 
-    public class ExerciseStatus : BaseEntity
-    {
-        [Key]
-        public int Id { get; set; }
-        public string Name { get; set; }
-    }
     public class ExerciseDownload : BaseEntity
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

@@ -11,12 +11,15 @@ namespace FittimePanelApi.Repository
     {
         private readonly AppDb _context;
         private IGenericRepository<Ticket> _tickets;
+        private IGenericRepository<Exercise> _exercises;
 
         public UnitOfWork(AppDb context)
         {
             _context = context;
         }
+
         public IGenericRepository<Ticket> Tickets => _tickets ??= new GenericRepository<Ticket>(_context);
+        public IGenericRepository<Exercise> Exercises => _exercises ??= new GenericRepository<Exercise>(_context);
 
         public void Dispose()
         {

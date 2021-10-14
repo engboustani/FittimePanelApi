@@ -44,16 +44,4 @@ namespace FittimePanelApi.Data
         public int Status { get; set; }
         public string Text { get; set; }
     }
-
-    public class TicketNew
-    {
-        public string Title { get; set; }
-        public string Description { get; set; }
-    }
-
-    public class TicketNewResponse
-    {
-        public string Description { get; set; }
-    }
-
 }

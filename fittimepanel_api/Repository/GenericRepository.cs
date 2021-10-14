@@ -26,6 +26,12 @@ namespace FittimePanelApi.Repository
             _db.Remove(entity);
         }
 
+        public async Task Delete(Guid id)
+        {
+            var entity = await _db.FindAsync(id);
+            _db.Remove(entity);
+        }
+
         public void DeleteRange(IEnumerable<T> entities)
         {
             _db.RemoveRange(entities);

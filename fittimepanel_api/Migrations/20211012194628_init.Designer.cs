@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FittimePanelApi.Migrations
 {
     [DbContext(typeof(AppDb))]
-    [Migration("20211012095652_init")]
+    [Migration("20211012194628_init")]
     partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -28,10 +28,10 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int?>("ExerciseStatusId")
+                    b.Property<int?>("ExerciseTypeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ExerciseTypeId")
+                    b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedDate")
@@ -44,8 +44,6 @@ namespace FittimePanelApi.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ExerciseStatusId");
 
                     b.HasIndex("ExerciseTypeId");
 
@@ -83,9 +81,9 @@ namespace FittimePanelApi.Migrations
 
             modelBuilder.Entity("FittimePanelApi.Data.ExerciseMeta", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("char(36)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
@@ -112,26 +110,6 @@ namespace FittimePanelApi.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ExerciseMetas");
-                });
-
-            modelBuilder.Entity("FittimePanelApi.Data.ExerciseStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ExerciseStatus");
                 });
 
             modelBuilder.Entity("FittimePanelApi.Data.ExerciseType", b =>
@@ -166,28 +144,28 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<Guid?>("ExerciseId")
+                        .HasColumnType("char(36)");
+
                     b.Property<int?>("PaymentGetwayId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PaymentStatusId")
+                    b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId1")
+                    b.Property<string>("UserId")
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ExerciseId");
+
                     b.HasIndex("PaymentGetwayId");
 
-                    b.HasIndex("PaymentStatusId");
-
-                    b.HasIndex("UserId1");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Payments");
                 });
@@ -210,54 +188,6 @@ namespace FittimePanelApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PaymentGetways");
-                });
-
-            modelBuilder.Entity("FittimePanelApi.Data.PaymentMeta", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Key")
-                        .HasColumnType("longtext");
-
-                    b.Property<Guid?>("PaymentId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PaymentId");
-
-                    b.ToTable("PaymentMetas");
-                });
-
-            modelBuilder.Entity("FittimePanelApi.Data.PaymentStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PaymentStatus");
                 });
 
             modelBuilder.Entity("FittimePanelApi.Data.Ticket", b =>
@@ -402,9 +332,6 @@ namespace FittimePanelApi.Migrations
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int?>("UserGroupId")
-                        .HasColumnType("int");
-
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
@@ -418,29 +345,7 @@ namespace FittimePanelApi.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
 
-                    b.HasIndex("UserGroupId");
-
                     b.ToTable("AspNetUsers");
-                });
-
-            modelBuilder.Entity("FittimePanelApi.Data.UserGroup", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserGroups");
                 });
 
             modelBuilder.Entity("FittimePanelApi.Data.UserMeta", b =>
@@ -471,31 +376,6 @@ namespace FittimePanelApi.Migrations
                     b.ToTable("UserMetas");
                 });
 
-            modelBuilder.Entity("FittimePanelApi.Data.UserRule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int?>("UserGroupId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserGroupId");
-
-                    b.ToTable("UserRules");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -520,6 +400,22 @@ namespace FittimePanelApi.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "43ef451c-2175-4d5a-bd0a-393783d41d9a",
+                            ConcurrencyStamp = "be98d98a-a3e6-414f-9346-05249e8c5f30",
+                            Name = "User",
+                            NormalizedName = "USER"
+                        },
+                        new
+                        {
+                            Id = "c291c56c-9353-4955-8f78-d6fd6da31d7f",
+                            ConcurrencyStamp = "7cf43f5f-d3ed-47c8-894b-962db85ddb92",
+                            Name = "Administrator",
+                            NormalizedName = "ADMINISTRATOR"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -626,10 +522,6 @@ namespace FittimePanelApi.Migrations
 
             modelBuilder.Entity("FittimePanelApi.Data.Exercise", b =>
                 {
-                    b.HasOne("FittimePanelApi.Data.ExerciseStatus", "ExerciseStatus")
-                        .WithMany()
-                        .HasForeignKey("ExerciseStatusId");
-
                     b.HasOne("FittimePanelApi.Data.ExerciseType", "ExerciseType")
                         .WithMany()
                         .HasForeignKey("ExerciseTypeId");
@@ -641,8 +533,6 @@ namespace FittimePanelApi.Migrations
                     b.HasOne("FittimePanelApi.Data.User", "UserStudent")
                         .WithMany()
                         .HasForeignKey("UserStudentId");
-
-                    b.Navigation("ExerciseStatus");
 
                     b.Navigation("ExerciseType");
 
@@ -677,28 +567,23 @@ namespace FittimePanelApi.Migrations
 
             modelBuilder.Entity("FittimePanelApi.Data.Payment", b =>
                 {
-                    b.HasOne("FittimePanelApi.Data.PaymentGetway", null)
+                    b.HasOne("FittimePanelApi.Data.Exercise", "Exercise")
+                        .WithMany()
+                        .HasForeignKey("ExerciseId");
+
+                    b.HasOne("FittimePanelApi.Data.PaymentGetway", "PaymentGetway")
                         .WithMany("Payments")
                         .HasForeignKey("PaymentGetwayId");
 
-                    b.HasOne("FittimePanelApi.Data.PaymentStatus", null)
-                        .WithMany("Payments")
-                        .HasForeignKey("PaymentStatusId");
-
                     b.HasOne("FittimePanelApi.Data.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Exercise");
+
+                    b.Navigation("PaymentGetway");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("FittimePanelApi.Data.PaymentMeta", b =>
-                {
-                    b.HasOne("FittimePanelApi.Data.Payment", "Payment")
-                        .WithMany()
-                        .HasForeignKey("PaymentId");
-
-                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("FittimePanelApi.Data.Ticket", b =>
@@ -740,15 +625,6 @@ namespace FittimePanelApi.Migrations
                     b.Navigation("Ticket");
                 });
 
-            modelBuilder.Entity("FittimePanelApi.Data.User", b =>
-                {
-                    b.HasOne("FittimePanelApi.Data.UserGroup", "UserGroup")
-                        .WithMany("Users")
-                        .HasForeignKey("UserGroupId");
-
-                    b.Navigation("UserGroup");
-                });
-
             modelBuilder.Entity("FittimePanelApi.Data.UserMeta", b =>
                 {
                     b.HasOne("FittimePanelApi.Data.User", "User")
@@ -756,15 +632,6 @@ namespace FittimePanelApi.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("FittimePanelApi.Data.UserRule", b =>
-                {
-                    b.HasOne("FittimePanelApi.Data.UserGroup", "UserGroup")
-                        .WithMany("UserRules")
-                        .HasForeignKey("UserGroupId");
-
-                    b.Navigation("UserGroup");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -830,11 +697,6 @@ namespace FittimePanelApi.Migrations
                     b.Navigation("Payments");
                 });
 
-            modelBuilder.Entity("FittimePanelApi.Data.PaymentStatus", b =>
-                {
-                    b.Navigation("Payments");
-                });
-
             modelBuilder.Entity("FittimePanelApi.Data.Ticket", b =>
                 {
                     b.Navigation("TicketMessages");
@@ -845,13 +707,6 @@ namespace FittimePanelApi.Migrations
             modelBuilder.Entity("FittimePanelApi.Data.User", b =>
                 {
                     b.Navigation("UserMetas");
-                });
-
-            modelBuilder.Entity("FittimePanelApi.Data.UserGroup", b =>
-                {
-                    b.Navigation("UserRules");
-
-                    b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
         }

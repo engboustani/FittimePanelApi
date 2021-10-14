@@ -8,6 +8,8 @@ namespace FittimePanelApi.Models
     public class CreateTicketDTO
     {
         public string Title { get; set; }
+        public IList<CreateNewTicketMessageDTO> TicketMessages { get; set; }
+        public IList<CreateNewTicketStatusDTO> TicketStatuses { get; set; }
     }
 
     public class TicketDTO : CreateTicketDTO
@@ -17,10 +19,14 @@ namespace FittimePanelApi.Models
         public IList<TicketStatusDTO> TicketStatuses { get; set; }
     }
 
-    public class CreateTicketMessageDTO
+    public class CreateNewTicketMessageDTO
+    {
+        public string Text { get; set; }
+    }
+
+    public class CreateTicketMessageDTO : CreateNewTicketMessageDTO
     {
         public Guid TicketId { get; set; }
-        public string Text { get; set; }
     }
 
     public class TicketMessageDTO : CreateTicketMessageDTO
@@ -29,11 +35,16 @@ namespace FittimePanelApi.Models
         public TicketDTO Ticket { get; set; }
     }
 
-    public class CreateTicketStatusDTO
+    public class CreateNewTicketStatusDTO
     {
-        public Guid TicketId { get; set; }
         public int Status { get; set; }
         public string Text { get; set; }
+    }
+
+
+    public class CreateTicketStatusDTO : CreateNewTicketStatusDTO
+    {
+        public Guid TicketId { get; set; }
     }
 
     public class TicketStatusDTO : CreateTicketStatusDTO

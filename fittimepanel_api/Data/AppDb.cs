@@ -26,8 +26,6 @@ namespace FittimePanelApi.Data
 
         // Users
         public DbSet<UserMeta> UserMetas { get; set; }
-        public DbSet<UserGroup> UserGroups { get; set; }
-        public DbSet<UserRule> UserRules { get; set; }
 
         // Tickets
         public DbSet<Ticket> Tickets { get; set; }
@@ -38,14 +36,11 @@ namespace FittimePanelApi.Data
         public DbSet<Exercise> Exercises { get; set; }
         public DbSet<ExerciseDownload> ExerciseDownloads { get; set; }
         public DbSet<ExerciseMeta> ExerciseMetas { get; set; }
-        public DbSet<ExerciseStatus> ExerciseStatus { get; set; }
         public DbSet<ExerciseType> ExerciseTypes { get; set; }
 
         // Payments
         public DbSet<Payment> Payments { get; set; }
         public DbSet<PaymentGetway> PaymentGetways { get; set; }
-        public DbSet<PaymentMeta> PaymentMetas { get; set; }
-        public DbSet<PaymentStatus> PaymentStatus { get; set; }
 
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{

@@ -54,6 +54,7 @@ namespace FittimePanelApi.Services
         {
             var claims = new List<Claim>
              {
+                 new Claim(ClaimTypes.NameIdentifier, _user.Id),
                  new Claim(ClaimTypes.Name, _user.UserName)
              };
 
