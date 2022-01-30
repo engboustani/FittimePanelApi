@@ -5,7 +5,7 @@ spec:
   port: 80
   source:
     context: .
-    dll_name: fittimepanel-api.dll
+    dll_name: FittimePanelApi.dll
     dotnet_version: '5.0'
     project_type: aspnet
   env:
@@ -19,8 +19,9 @@ spec:
       value: hboo1375
     - name: KEY
       value: 51d4b650-c888-40d3-9308-0e393d2f3166
-  command:
-    - dotnet
-    - ef
-    - database
-    - update
+    - name: SMS_USER
+      value: engboustani
+    - name: SMS_PASSWORD
+      value: f6138g
+    - name: SMS_FROM
+      value: 50004001676333

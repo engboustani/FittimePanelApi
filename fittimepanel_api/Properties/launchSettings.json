@@ -14,8 +14,13 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
+        "SMS_USER": "engboustani",
+        "IDPAY_KEY": "6a7f99eb-7c20-4412-a972-6dfb7cd253a4",
+        "SMS_FROM": "50004001676333",
         "KEY": "63aa6b52-a9c4-4f92-9699-6843ed98134e",
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PAYIR_KEY": "test",
+        "SMS_PASSWORD": "f6138g"
       }
     },
     "fittimepanel_api": {

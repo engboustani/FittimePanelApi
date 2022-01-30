@@ -3,14 +3,16 @@ using System;
 using FittimePanelApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace FittimePanelApi.Migrations
 {
     [DbContext(typeof(AppDb))]
-    partial class AppDbModelSnapshot : ModelSnapshot
+    [Migration("20211207055053_updateexercisetype")]
+    partial class updateexercisetype
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -26,7 +28,7 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("ExerciseTypeId")
+                    b.Property<int?>("ExerciseTypeId")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
@@ -164,6 +166,16 @@ namespace FittimePanelApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ExerciseTypes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2021, 12, 7, 9, 20, 52, 563, DateTimeKind.Local).AddTicks(1832),
+                            Name = "تمرین بدن سازی",
+                            Price = 2000000u,
+                            UpdatedDate = new DateTime(2021, 12, 7, 9, 20, 52, 563, DateTimeKind.Local).AddTicks(1929)
+                        });
                 });
 
             modelBuilder.Entity("FittimePanelApi.Data.Payment", b =>
@@ -178,17 +190,14 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid>("ExerciseId")
+                    b.Property<Guid?>("ExerciseId")
                         .HasColumnType("char(36)");
 
-                    b.Property<int>("PaymentGetwayId")
+                    b.Property<int?>("PaymentGetwayId")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
-
-                    b.Property<string>("Token")
-                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime(6)");
@@ -207,7 +216,7 @@ namespace FittimePanelApi.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("FittimePanelApi.Data.PaymentGetaway", b =>
+            modelBuilder.Entity("FittimePanelApi.Data.PaymentGetway", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -216,13 +225,7 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("Name")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("NameFa")
                         .HasColumnType("longtext");
 
                     b.Property<DateTime>("UpdatedDate")
@@ -231,32 +234,6 @@ namespace FittimePanelApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PaymentGetways");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Enabled = true,
-                            Name = "payir",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Enabled = true,
-                            Name = "idpay",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Enabled = true,
-                            Name = "zarinpal",
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        });
                 });
 
             modelBuilder.Entity("FittimePanelApi.Data.Ticket", b =>
@@ -501,15 +478,15 @@ namespace FittimePanelApi.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "46d01f80-aa4c-4ec2-a677-f2f5c933896f",
-                            ConcurrencyStamp = "43142f78-7b12-436a-8eed-965d419c8b9d",
+                            Id = "5c8df1f2-f0dc-4994-8696-645100ba5654",
+                            ConcurrencyStamp = "9b24e21f-f80b-41f0-9a95-2c846fd35533",
                             Name = "User",
                             NormalizedName = "USER"
                         },
                         new
                         {
-                            Id = "3dce7029-5faf-480d-912f-8bee727599fd",
-                            ConcurrencyStamp = "0c8029b0-431e-4765-8c4f-e37fb138867c",
+                            Id = "a3a5905c-9ff5-4e8a-91ea-7015531a994a",
+                            ConcurrencyStamp = "7074657c-f1ae-42d5-b74e-d9447138ad58",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });
@@ -620,10 +597,8 @@ namespace FittimePanelApi.Migrations
             modelBuilder.Entity("FittimePanelApi.Data.Exercise", b =>
                 {
                     b.HasOne("FittimePanelApi.Data.ExerciseType", "ExerciseType")
-                        .WithMany("Exercises")
-                        .HasForeignKey("ExerciseTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("ExerciseTypeId");
 
                     b.HasOne("FittimePanelApi.Data.User", "UserInstructor")
                         .WithMany()
@@ -683,15 +658,11 @@ namespace FittimePanelApi.Migrations
                 {
                     b.HasOne("FittimePanelApi.Data.Exercise", "Exercise")
                         .WithMany()
-                        .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ExerciseId");
 
-                    b.HasOne("FittimePanelApi.Data.PaymentGetaway", "PaymentGetway")
+                    b.HasOne("FittimePanelApi.Data.PaymentGetway", "PaymentGetway")
                         .WithMany("Payments")
-                        .HasForeignKey("PaymentGetwayId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PaymentGetwayId");
 
                     b.HasOne("FittimePanelApi.Data.User", "User")
                         .WithMany()
@@ -821,12 +792,7 @@ namespace FittimePanelApi.Migrations
                     b.Navigation("ExerciseMetas");
                 });
 
-            modelBuilder.Entity("FittimePanelApi.Data.ExerciseType", b =>
-                {
-                    b.Navigation("Exercises");
-                });
-
-            modelBuilder.Entity("FittimePanelApi.Data.PaymentGetaway", b =>
+            modelBuilder.Entity("FittimePanelApi.Data.PaymentGetway", b =>
                 {
                     b.Navigation("Payments");
                 });

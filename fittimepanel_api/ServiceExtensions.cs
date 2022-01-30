@@ -1,9 +1,15 @@
 ﻿using FittimePanelApi.Data;
+using FittimePanelApi.Getaways;
+using FittimePanelApi.IGetaways;
+using FittimePanelApi.INotifications;
+using FittimePanelApi.Notifications;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,5 +51,41 @@ namespace FittimePanelApi
                 };
             });
         }
+
+        public static void ConfigureSmsPanel(this IServiceCollection services)
+        {
+            var username = Environment.GetEnvironmentVariable("SMS_USER");
+            var password = Environment.GetEnvironmentVariable("SMS_PASSWORD");
+            var from = Environment.GetEnvironmentVariable("SMS_FROM");
+
+            services.AddScoped<IRestClient, RestClient>();
+            services.AddScoped<ISmsPanel>(x =>
+                new SmsPanel(x.GetRequiredService<IRestClient>(),
+                             x.GetRequiredService<ILogger<SmsPanel>>(),
+                             username, password, from));
+        }
+
+        public static void ConfigureIDPay(this IServiceCollection services)
+        {
+            var key = Environment.GetEnvironmentVariable("IDPAY_KEY");
+
+            services.AddScoped<IRestClient, RestClient>();
+            services.AddScoped<IIDPayGetaway>(x =>
+                new IDPayGetaway(x.GetRequiredService<IRestClient>(),
+                             x.GetRequiredService<ILogger<IDPayGetaway>>(),
+                             key));
+        }
+
+        public static void ConfigurePayir(this IServiceCollection services)
+        {
+            var key = Environment.GetEnvironmentVariable("PAYIR_KEY");
+
+            services.AddScoped<IRestClient, RestClient>();
+            services.AddScoped<IPayirGetaway>(x =>
+                new PayirGetaway(x.GetRequiredService<IRestClient>(),
+                             x.GetRequiredService<ILogger<PayirGetaway>>(),
+                             key));
+        }
+
     }
 }

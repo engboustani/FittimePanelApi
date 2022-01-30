@@ -1,6 +1,8 @@
 using FittimePanelApi.Configuration;
 using FittimePanelApi.Data;
+using FittimePanelApi.INotifications;
 using FittimePanelApi.IRepository;
+using FittimePanelApi.Notifications;
 using FittimePanelApi.Repository;
 using FittimePanelApi.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -55,12 +57,23 @@ namespace FittimePanelApi
                 o.AddPolicy("AllowAll", p =>
                     p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
                 );
+                o.AddPolicy("Development", p =>
+                    p.WithOrigins(origins: new string[] { "http://localhost:8080", "https://localhost:8080" } ).AllowAnyMethod().AllowAnyHeader()
+                );
+                o.AddPolicy("Production", p =>
+                    p.WithOrigins("https://panel.fittimeteam.com").AllowAnyMethod().AllowAnyHeader()
+                );
             });
 
             services.AddAutoMapper(typeof(MapperInitilizer));
 
             services.AddTransient<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IAuthManager, AuthManager>();
+
+            services.ConfigureSmsPanel();
+            //services.ConfigureIDPay();
+            services.ConfigurePayir();
+
 
             services.AddSwaggerGen(c =>
             {
@@ -86,6 +99,7 @@ namespace FittimePanelApi
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "fittimepanel_api v1"));
+                app.UseCors("AllowAll");
             }
 
             string connectionString = ConnectionString();
@@ -97,10 +111,14 @@ namespace FittimePanelApi
                 context.Database.Migrate();
             }
 
+            if (env.IsProduction())
+            {
+                app.UseHttpsRedirection();
+            }
 
-            app.UseHttpsRedirection();
-
-            app.UseCors("AllowAll");
+            //app.UseCors("AllowAll");
+            app.UseCors("Development");
+            app.UseCors("Production");
 
             app.UseRouting();
 

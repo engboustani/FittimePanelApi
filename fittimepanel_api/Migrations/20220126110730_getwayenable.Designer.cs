@@ -3,14 +3,16 @@ using System;
 using FittimePanelApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace FittimePanelApi.Migrations
 {
     [DbContext(typeof(AppDb))]
-    partial class AppDbModelSnapshot : ModelSnapshot
+    [Migration("20220126110730_getwayenable")]
+    partial class getwayenable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -178,17 +180,14 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid>("ExerciseId")
+                    b.Property<Guid?>("ExerciseId")
                         .HasColumnType("char(36)");
 
-                    b.Property<int>("PaymentGetwayId")
+                    b.Property<int?>("PaymentGetwayId")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
-
-                    b.Property<string>("Token")
-                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime(6)");
@@ -220,9 +219,6 @@ namespace FittimePanelApi.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("NameFa")
                         .HasColumnType("longtext");
 
                     b.Property<DateTime>("UpdatedDate")
@@ -501,15 +497,15 @@ namespace FittimePanelApi.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "46d01f80-aa4c-4ec2-a677-f2f5c933896f",
-                            ConcurrencyStamp = "43142f78-7b12-436a-8eed-965d419c8b9d",
+                            Id = "6a0f8faf-a8f6-4291-b022-429ed3c18571",
+                            ConcurrencyStamp = "2d749c89-69b8-42dc-ad59-cd6cf5345854",
                             Name = "User",
                             NormalizedName = "USER"
                         },
                         new
                         {
-                            Id = "3dce7029-5faf-480d-912f-8bee727599fd",
-                            ConcurrencyStamp = "0c8029b0-431e-4765-8c4f-e37fb138867c",
+                            Id = "e2e441e6-b12d-4913-b64e-83be58bafe87",
+                            ConcurrencyStamp = "82d150d9-f96a-4826-96a1-21e98e778f63",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });
@@ -683,15 +679,11 @@ namespace FittimePanelApi.Migrations
                 {
                     b.HasOne("FittimePanelApi.Data.Exercise", "Exercise")
                         .WithMany()
-                        .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ExerciseId");
 
                     b.HasOne("FittimePanelApi.Data.PaymentGetaway", "PaymentGetway")
                         .WithMany("Payments")
-                        .HasForeignKey("PaymentGetwayId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PaymentGetwayId");
 
                     b.HasOne("FittimePanelApi.Data.User", "User")
                         .WithMany()

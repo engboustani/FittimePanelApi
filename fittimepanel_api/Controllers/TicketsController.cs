@@ -22,7 +22,7 @@ namespace FittimePanelApi.Controllers
     public class TicketsController : ControllerBase, ITicketsController
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger _logger;
+        private readonly ILogger<TicketsController> _logger;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
 
@@ -66,7 +66,6 @@ namespace FittimePanelApi.Controllers
             }
         }
 
-
         // POST: api/Tickets
         [Authorize]
         [HttpPost]
@@ -87,10 +86,17 @@ namespace FittimePanelApi.Controllers
                 var currentUser = await _userManager.GetUserAsync(User);
                 ticket.UserCreated = currentUser;
                 ticket.TicketMessages.First().User = currentUser;
+                var ticketStatus = new TicketStatus()
+                {
+                    Status = 1,
+                    Text = "در انتظار پاسخ"
+                };
+                ticket.TicketStatuses.Add(ticketStatus);
+
                 await _unitOfWork.Tickets.Insert(ticket);
                 await _unitOfWork.Save();
 
-                return CreatedAtRoute("ReadById", new { id = ticket.Id }, ticket);
+                return CreatedAtRoute("ReadTicketById", new { id = ticket.Id }, ticket);
             }
             catch (Exception ex)
             {
@@ -108,8 +114,21 @@ namespace FittimePanelApi.Controllers
         {
             try
             {
-                var tickets = await _unitOfWork.Tickets.GetAll();
-                var result = _mapper.Map<IList<TicketDTO>>(tickets);
+                var tickets = await _unitOfWork.Tickets.GetAll(includes: new List<string> { "TicketStatuses" });
+                var result = _mapper.Map<IList<TicketListItemDTO>>(tickets);
+                
+                int index = 0;
+                foreach (var ticket in result)
+                {
+                    if (tickets[index].TicketStatuses.Count == 0)
+                    {
+                        index++;
+                        continue;
+                    }
+                    var last_status = _mapper.Map<TicketStatusDTO>(tickets[index].TicketStatuses.Last());
+                    ticket.LastStatus = last_status;
+                    index++;
+                }
                 return Ok(result);
             }
             catch (Exception ex)
@@ -121,7 +140,7 @@ namespace FittimePanelApi.Controllers
 
         // GET: api/Tickets/<uuid>
         [Authorize]
-        [HttpGet("{id:Guid}", Name = "ReadById")]
+        [HttpGet("{id:Guid}", Name = "ReadTicketById")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ReadById(Guid id)
@@ -169,7 +188,7 @@ namespace FittimePanelApi.Controllers
                 _unitOfWork.Tickets.Update(ticket);
                 await _unitOfWork.Save();
 
-                return CreatedAtRoute("ReadById", new { id = ticket.Id }, ticket);
+                return CreatedAtRoute("ReadTicketById", new { id = ticket.Id }, ticket);
             }
             catch (Exception ex)
             {

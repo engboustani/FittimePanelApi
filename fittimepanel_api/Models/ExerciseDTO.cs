@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,9 +19,9 @@ namespace FittimePanelApi.Models
 
     public class CreateExerciseDTO
     {
-        public virtual ExerciseTypeDTO ExerciseType { get; set; }
+        public virtual int ExerciseTypeId { get; set; }
         public virtual ICollection<CreateExerciseMetaDTO> ExerciseMetas { get; set; }
-        public virtual ExerciseStatus Status { get; set; }
+        public virtual ICollection<ExerciseBlobResponseDTO> ExerciseBlobs { get; set; }
     }
 
     public class ExerciseDTO : CreateExerciseDTO
@@ -30,10 +32,26 @@ namespace FittimePanelApi.Models
         public virtual ICollection<ExerciseDownloadDTO> ExerciseDownloads { get; set; }
     }
 
+    public class ExerciseDetailDTO : ExerciseDTO
+    {
+        public virtual ExerciseTypeDTO ExerciseType { get; set; }
+        public ExerciseStatus ExerciseStatus { get; set; }
+        public DateTime CreatedDate { get; set; }
+
+    }
+
+    public class ExerciseListItemDTO
+    {
+        public Guid Id { get; set; }
+        public ExerciseStatus ExerciseStatus { get; set; }
+        public CreateExerciseTypeDTO ExerciseType { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }
+
     public class CreateExerciseTypeDTO
     {
         public string Name { get; set; }
-        public int Price { get; set; }
+        public double Price { get; set; }
     }
 
     public class ExerciseTypeDTO : CreateExerciseTypeDTO
@@ -60,5 +78,20 @@ namespace FittimePanelApi.Models
     public class ExerciseDownloadDTO : CreateExerciseDownloadDTO
     {
         public Guid Id { get; set; }
+    }
+
+    public class ExerciseBlobDTO
+    {
+        [Required]
+        public string Key { get; set; }
+        [Required]
+        [Display(Name = "File")]
+        public IFormFile File { get; set; }
+    }
+
+    public class ExerciseBlobResponseDTO
+    {
+        public Guid Id { get; set; }
+        public string Key { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AutoMapper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,7 +18,18 @@ namespace FittimePanelApi.Models
         public Guid Id { get; set; }
         public IList<TicketMessageDTO> TicketMessages { get; set; }
         public IList<TicketStatusDTO> TicketStatuses { get; set; }
+        public TicketStatusDTO LastStatus { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
+
+    public class TicketListItemDTO
+    {
+        public string Title { get; set; }
+        public Guid Id { get; set; }
+        public TicketStatusDTO LastStatus { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }
+
 
     public class CreateNewTicketMessageDTO
     {

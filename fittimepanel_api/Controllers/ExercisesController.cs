@@ -3,6 +3,8 @@ using FittimePanelApi.Data;
 using FittimePanelApi.IControllers;
 using FittimePanelApi.IRepository;
 using FittimePanelApi.Models;
+using ImageProcessor;
+using ImageProcessor.Plugins.WebP.Imaging.Formats;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -10,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,13 +23,13 @@ namespace FittimePanelApi.Controllers
     public class ExercisesController : ControllerBase, IExercisesController
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger _logger;
+        private readonly ILogger<ExercisesController> _logger;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
 
         public ExercisesController(UserManager<User> userManager
                                 , IUnitOfWork unitOfWork
-                                , ILogger<TicketsController> logger
+                                , ILogger<ExercisesController> logger
                                 , IMapper mapper)
         {
             _userManager = userManager;
@@ -83,10 +86,14 @@ namespace FittimePanelApi.Controllers
                 var exercise = _mapper.Map<Exercise>(createExerciseDTO);
                 var currentUser = await _userManager.GetUserAsync(User);
                 exercise.UserStudent = currentUser;
+                
+                //var type = await _unitOfWork.ExerciseTypes.Get(q => q.Id == createExerciseDTO.ExerciseType.Id);
+                //exercise.ExerciseType = type;
+
                 await _unitOfWork.Exercises.Insert(exercise);
                 await _unitOfWork.Save();
 
-                return CreatedAtRoute("ReadById", new { id = exercise.Id }, exercise);
+                return CreatedAtRoute("ReadExerciseById", new { id = exercise.Id }, exercise);
             }
             catch (Exception ex)
             {
@@ -104,8 +111,11 @@ namespace FittimePanelApi.Controllers
         {
             try
             {
-                var exercises = await _unitOfWork.Exercises.GetAll();
-                var result = _mapper.Map<IList<ExerciseDTO>>(exercises);
+                var currentUser = await _userManager.GetUserAsync(User);
+                var exercises = await _unitOfWork.Exercises.GetAll(
+                    expression: q => q.UserStudent == currentUser,
+                    includes: new List<string> { "ExerciseType", "Payments" });
+                var result = _mapper.Map<IList<ExerciseListItemDTO>>(exercises);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -117,15 +127,17 @@ namespace FittimePanelApi.Controllers
 
         // GET: api/Exercises/<uuid>
         [Authorize]
-        [HttpGet("{id:Guid}", Name = "ReadById")]
+        [HttpGet("{id:Guid}", Name = "ReadExerciseById")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ReadById(Guid id)
         {
             try
             {
-                var exercise = await _unitOfWork.Exercises.Get(q => q.Id == id, new List<string> { });
-                var result = _mapper.Map<ExerciseDTO>(exercise);
+                var exercise = await _unitOfWork.Exercises.Get(q => q.Id == id, new List<string> {
+                    "ExerciseType", "ExerciseDownloads", "ExerciseMetas", "ExerciseBlobs"
+                });
+                var result = _mapper.Map<ExerciseDetailDTO>(exercise);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -134,5 +146,84 @@ namespace FittimePanelApi.Controllers
                 return StatusCode(500, "Internal Server Error. Please Try Again Later.");
             }
         }
+
+        // POST: api/Exercises/blob
+        [Authorize]
+        [HttpPost("blob"), DisableRequestSizeLimit]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> AddOrUpdateBlob([FromForm] ExerciseBlobDTO exerciseBlobDTO)
+        {
+            try
+            {
+                using var memoryStream = new MemoryStream();
+                string[] allowedImageTypes = new string[] { "image/jpeg", "image/png" };
+                if (!allowedImageTypes.Contains(exerciseBlobDTO.File.ContentType.ToLower()))
+                {
+                    _logger.LogError($"File format invalid for {nameof(AddOrUpdateBlob)}");
+                    return BadRequest("File format invalid");
+                }
+                await exerciseBlobDTO.File.CopyToAsync(memoryStream);
+
+                // Upload the file if less than 2 MB
+                if (memoryStream.Length < 2097152)
+                {
+                    var currentUser = await _userManager.GetUserAsync(User);
+                    ExerciseBlob exerciseBlob = new ExerciseBlob();
+                    exerciseBlob = _mapper.Map<ExerciseBlob>(exerciseBlobDTO);
+                    exerciseBlob.User = currentUser;
+                    using (MemoryStream outStream = new MemoryStream())
+                    {
+                        using (ImageFactory imageFactory = new ImageFactory(preserveExifData: false))
+                        {
+                            imageFactory.Load(memoryStream.ToArray())
+                                        .Format(new WebPFormat())
+                                        .Quality(100)
+                                        .Save(outStream);
+
+                            exerciseBlob.Value = outStream.ToArray();
+                        }
+                    }
+
+                    await _unitOfWork.ExerciseBlobs.Insert(exerciseBlob);
+                    await _unitOfWork.Save();
+                    var result = _mapper.Map<ExerciseBlobResponseDTO>(exerciseBlob);
+
+                    return Ok(result);
+                }
+                else
+                {
+                    _logger.LogError($"Size limit for {nameof(AddOrUpdateBlob)}");
+                    return BadRequest("Size limited");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(AddOrUpdateBlob)}");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+            }
+        }
+
+        // GET: api/Exercises/Types
+        [Authorize]
+        [HttpGet("Types")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ReadAllTypes()
+        {
+            try
+            {
+                var exerciseTypes = await _unitOfWork.ExerciseTypes.GetAll();
+                var result = _mapper.Map<IList<ExerciseTypeDTO>>(exerciseTypes);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went wrong in the {nameof(ReadAllTypes)}");
+                return StatusCode(500, "Internal Server Error, Please try again later.");
+            }
+        }
+
     }
 }

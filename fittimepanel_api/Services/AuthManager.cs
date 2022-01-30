@@ -78,7 +78,7 @@ namespace FittimePanelApi.Services
 
         public async Task<bool> ValidateUser(LoginUserDTO userDTO)
         {
-            _user = await _userManager.FindByNameAsync(userDTO.PhoneNumber);
+            _user = await _userManager.FindByNameAsync(userDTO.UserName);
             var validPassword = await _userManager.CheckPasswordAsync(_user, userDTO.Password);
             return (_user != null && validPassword);
         }

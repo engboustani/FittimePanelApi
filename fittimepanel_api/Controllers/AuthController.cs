@@ -12,28 +12,33 @@ using Microsoft.Extensions.Logging;
 using AutoMapper;
 using FittimePanelApi.Models;
 using FittimePanelApi.Services;
+using FittimePanelApi.INotifications;
+using FittimePanelApi.IControllers;
+using FittimePanelApi.Models.Notifications;
 
 namespace FittimePanelApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : ControllerBase
+    public class AuthController : ControllerBase, IAuthController
     {
         private readonly UserManager<User> _userManager;
         private readonly ILogger<AuthController> _logger;
         private readonly IMapper _mapper;
         private readonly IAuthManager _authManager;
-
+        private readonly ISmsPanel _smsPanel;
 
         public AuthController(UserManager<User> userManager,
-            ILogger<AuthController> logger,
-            IMapper mapper,
-            IAuthManager authManager)
+                                ILogger<AuthController> logger,
+                                IMapper mapper,
+                                IAuthManager authManager,
+                                ISmsPanel smsPanel)
         {
             _userManager = userManager;
             _logger = logger;
             _mapper = mapper;
             _authManager = authManager;
+            _smsPanel = smsPanel;
         }
 
         [HttpPost]
@@ -52,7 +57,7 @@ namespace FittimePanelApi.Controllers
             try
             {
                 var user = _mapper.Map<User>(userDTO);
-                user.UserName = userDTO.PhoneNumber;
+                user.UserName = userDTO.UserName;
                 var result = await _userManager.CreateAsync(user, userDTO.Password);
 
                 if (!result.Succeeded)
@@ -64,6 +69,18 @@ namespace FittimePanelApi.Controllers
                     return BadRequest(ModelState);
                 }
                 await _userManager.AddToRolesAsync(user, userDTO.Roles);
+                try
+                {
+                    await _smsPanel.SendSMS(new SendSmsDTO()
+                    {
+                        To = new string[] { user.PhoneNumber },
+                        Text = String.Format("{0} عزیز شما با موفقیت ثبت نام کردید. فیت تایم", user.FullName)
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Can't send sms massages");
+                }
                 return Accepted();
             }
             catch (Exception ex)
@@ -77,7 +94,7 @@ namespace FittimePanelApi.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDTO userDTO)
         {
-            _logger.LogInformation($"Login Attempt for {userDTO.PhoneNumber} ");
+            _logger.LogInformation($"Login Attempt for {userDTO.UserName} ");
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -99,6 +116,13 @@ namespace FittimePanelApi.Controllers
             }
         }
 
+        [HttpPost]
+        [Authorize]
+        [Route("roles")]
+        public async Task<IActionResult> UserRoles()
+        {
+            throw new NotImplementedException();
+        }
 
         private static string ConvertPersianNumberToEnglish(string input)
         {
