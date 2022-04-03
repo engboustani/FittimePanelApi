@@ -35,7 +35,7 @@ namespace FittimePanelApi.Getaways
                         mobile = payment.User.PhoneNumber,
                         api = _key,
                         description = "Fittime Payment",
-                        redirect = String.Format("https://panel.fittimeteam.com/api/Payment/callback/payir")
+                        redirect = String.Format("https://panel.fittimeteam.com/v1/api/Callback/payir")
                     });
 
                 var response = await _apiClient.PostAsync<ResponseLinkCreatedPayirDTO>(restRequest);

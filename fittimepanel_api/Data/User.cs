@@ -8,6 +8,12 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FittimePanelApi.Data
 {
+    public enum Gender : int
+    {
+        Male,
+        Female,
+    }
+
     public class User : IdentityUser
     {
         public User()
@@ -25,6 +31,15 @@ namespace FittimePanelApi.Data
         }
         public virtual ICollection<UserMeta> UserMetas { get; set; }
         public virtual ICollection<UserBlob> UserBlobs { get; set; }
+        [PersonalData]
+        public DateTime LastLoginTime { get; set; }
+        [PersonalData]
+        public DateTime RegistrationDate { get; set; }
+        public Gender Gender { get; set; }
+        public DateTime Birthday { get; set; }
+        public List<Exercise> Exercises { get; set; }
+        public List<Ticket> Tickets { get; set; }
+
     }
 
     public class UserMeta : BaseEntity
@@ -33,6 +48,7 @@ namespace FittimePanelApi.Data
         public int Id { get; set; }
         public string Key { get; set; }
         public string Value { get; set; }
+        public string Description { get; set; }
         public virtual User User { get; set; }
     }
 
@@ -42,6 +58,7 @@ namespace FittimePanelApi.Data
         public int Id { get; set; }
         public string Key { get; set; }
         public byte[] Value { get; set; }
+        public string Description { get; set; }
         public virtual User User { get; set; }
     }
 

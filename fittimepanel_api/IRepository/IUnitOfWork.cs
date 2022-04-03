@@ -13,11 +13,13 @@ namespace FittimePanelApi.IRepository
         IGenericRepository<Exercise> Exercises { get; }
         IGenericRepository<ExerciseType> ExerciseTypes { get; }
         IGenericRepository<ExerciseBlob> ExerciseBlobs { get; }
+        IGenericRepository<ExerciseDownload> ExerciseDownloads { get; }
         IGenericRepository<User> Users { get; }
         IGenericRepository<UserMeta> UserMetas { get; }
         IGenericRepository<UserBlob> UserBlobs { get; }
         IGenericRepository<Payment> Payments { get; }
         IGenericRepository<PaymentGetaway> PaymentGetaways { get; }
+        IGenericRepository<PaymentDiscount> PaymentDiscounts { get; }
         Task Save();
     }
 }

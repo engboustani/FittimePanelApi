@@ -29,9 +29,20 @@ namespace FittimePanelApi.Data
             builder.Entity<ExerciseBlob>().Property(p => p.Value)
                 .HasColumnType("MediumBlob");
 
+            builder.Entity<ExerciseDownload>().Property(p => p.Value)
+                .HasColumnType("MediumBlob");
+
             builder.Entity<PaymentGetaway>().HasData(new PaymentGetaway { Id = 1, Name = "payir", Enabled = true });
             builder.Entity<PaymentGetaway>().HasData(new PaymentGetaway { Id = 2, Name = "idpay", Enabled = true });
             builder.Entity<PaymentGetaway>().HasData(new PaymentGetaway { Id = 3, Name = "zarinpal", Enabled = true });
+
+            builder.Entity<Exercise>()
+                .HasOne(p => p.UserStudent)
+                .WithMany(b => b.Exercises);
+
+            builder.Entity<Ticket>()
+                .HasOne(p => p.UserCreated)
+                .WithMany(b => b.Tickets);
         }
 
         // Users

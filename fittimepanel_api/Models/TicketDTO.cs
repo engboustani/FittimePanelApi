@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FittimePanelApi.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,8 @@ namespace FittimePanelApi.Models
         public string Title { get; set; }
         public IList<CreateNewTicketMessageDTO> TicketMessages { get; set; }
         public IList<CreateNewTicketStatusDTO> TicketStatuses { get; set; }
+        public string CaptchaId { get; set; }
+        public string UserEnteredCaptchaCode { get; set; }
     }
 
     public class TicketDTO : CreateTicketDTO
@@ -30,10 +33,27 @@ namespace FittimePanelApi.Models
         public DateTime CreatedDate { get; set; }
     }
 
+    public class TicketListAllItemDTO
+    {
+        public string Title { get; set; }
+        public Guid Id { get; set; }
+        public TicketStatusDTO LastStatus { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public UserShortListItemDTO UserCreated { get; set; }
+    }
+
+    public class TicketPageAllItemDTO
+    {
+        public PageInfo PageInfo { get; set; }
+        public IList<TicketListAllItemDTO> ItemsList { get; set; }
+    }
 
     public class CreateNewTicketMessageDTO
     {
         public string Text { get; set; }
+        public string CaptchaId { get; set; }
+        public string UserEnteredCaptchaCode { get; set; }
+
     }
 
     public class CreateTicketMessageDTO : CreateNewTicketMessageDTO
@@ -45,6 +65,7 @@ namespace FittimePanelApi.Models
     {
         public Guid Id { get; set; }
         public TicketDTO Ticket { get; set; }
+        public UserShortListItemDTO User { get; set; }
     }
 
     public class CreateNewTicketStatusDTO

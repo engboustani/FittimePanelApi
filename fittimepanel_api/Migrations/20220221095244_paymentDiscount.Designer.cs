@@ -3,14 +3,16 @@ using System;
 using FittimePanelApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace FittimePanelApi.Migrations
 {
     [DbContext(typeof(AppDb))]
-    partial class AppDbModelSnapshot : ModelSnapshot
+    [Migration("20220221095244_paymentDiscount")]
+    partial class paymentDiscount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -502,9 +504,6 @@ namespace FittimePanelApi.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("Key")
                         .HasColumnType("longtext");
 
@@ -532,9 +531,6 @@ namespace FittimePanelApi.Migrations
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("Key")
                         .HasColumnType("longtext");
@@ -583,15 +579,15 @@ namespace FittimePanelApi.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "85a3c8ee-43f7-4258-b48d-f1a0bd98e17e",
-                            ConcurrencyStamp = "2722c25f-99db-4fc8-b217-2dae915fe452",
+                            Id = "6e947082-d76d-4b8b-90f3-16e6e60c6616",
+                            ConcurrencyStamp = "5f39f79b-84bb-4013-b4bb-0664d084ca6d",
                             Name = "User",
                             NormalizedName = "USER"
                         },
                         new
                         {
-                            Id = "5ac0383d-2b41-4532-a88e-06abcd8b6964",
-                            ConcurrencyStamp = "766ee5f0-a73e-4eaa-a229-9207a52d3dcf",
+                            Id = "c87ee1ab-58bc-4eb4-8948-e35e68a3d16b",
+                            ConcurrencyStamp = "fa764b63-d437-4397-80c5-d2a480cd5b15",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });
@@ -712,7 +708,7 @@ namespace FittimePanelApi.Migrations
                         .HasForeignKey("UserInstructorId");
 
                     b.HasOne("FittimePanelApi.Data.User", "UserStudent")
-                        .WithMany("Exercises")
+                        .WithMany()
                         .HasForeignKey("UserStudentId");
 
                     b.Navigation("ExerciseType");
@@ -801,7 +797,7 @@ namespace FittimePanelApi.Migrations
                         .HasForeignKey("UserAnsweredId");
 
                     b.HasOne("FittimePanelApi.Data.User", "UserCreated")
-                        .WithMany("Tickets")
+                        .WithMany()
                         .HasForeignKey("UserCreatedId");
 
                     b.Navigation("UserAnswered");
@@ -937,10 +933,6 @@ namespace FittimePanelApi.Migrations
 
             modelBuilder.Entity("FittimePanelApi.Data.User", b =>
                 {
-                    b.Navigation("Exercises");
-
-                    b.Navigation("Tickets");
-
                     b.Navigation("UserBlobs");
 
                     b.Navigation("UserMetas");

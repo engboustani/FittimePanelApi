@@ -14,6 +14,7 @@ using AutoMapper;
 using FittimePanelApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using BotDetect.Web;
 
 namespace FittimePanelApi.Controllers
 {
@@ -82,6 +83,14 @@ namespace FittimePanelApi.Controllers
 
             try
             {
+                SimpleCaptcha yourFirstCaptcha = new SimpleCaptcha();
+                bool isHuman = yourFirstCaptcha.Validate(createTicketDTO.UserEnteredCaptchaCode, createTicketDTO.CaptchaId);
+                if (!isHuman)
+                {
+                    _logger.LogError($"Invalid Captcha entered {nameof(New)}");
+                    return BadRequest($"Invalid Captcha entered {nameof(New)}");
+                }
+
                 var ticket = _mapper.Map<Ticket>(createTicketDTO);
                 var currentUser = await _userManager.GetUserAsync(User);
                 ticket.UserCreated = currentUser;
@@ -114,7 +123,10 @@ namespace FittimePanelApi.Controllers
         {
             try
             {
-                var tickets = await _unitOfWork.Tickets.GetAll(includes: new List<string> { "TicketStatuses" });
+                var currentUser = await _userManager.GetUserAsync(User);
+                var tickets = await _unitOfWork.Tickets.GetAll(
+                    expression: t => t.UserCreated == currentUser,
+                    includes: new List<string> { "TicketStatuses" });
                 var result = _mapper.Map<IList<TicketListItemDTO>>(tickets);
                 
                 int index = 0;
@@ -138,6 +150,44 @@ namespace FittimePanelApi.Controllers
             }
         }
 
+        // GET: api/Tickets/All
+        [Authorize(Policy = "GetAllTickets")]
+        [HttpGet("All", Name = "ReadAllTickets")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ReadAllTickets([FromQuery] QueryParamsDTO qp)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var tickets = _unitOfWork.Tickets.GetPage(
+                    includes: new List<string> { "TicketStatuses", "UserCreated" },
+                    page: qp.Page,
+                    itemsPerPage: qp.ItemsPerPage);
+                await tickets.ToListAsync();
+                var result = _mapper.Map<TicketPageAllItemDTO>(tickets);
+
+                int index = 0;
+                foreach (var ticket in result.ItemsList)
+                {
+                    if (tickets.ItemsList[index].TicketStatuses.Count == 0)
+                    {
+                        index++;
+                        continue;
+                    }
+                    var last_status = _mapper.Map<TicketStatusDTO>(tickets.ItemsList[index].TicketStatuses.Last());
+                    ticket.LastStatus = last_status;
+                    index++;
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went wrong in the {nameof(ReadAllTickets)}");
+                return StatusCode(500, "Internal Server Error, Please try again later.");
+            }
+        }
+
         // GET: api/Tickets/<uuid>
         [Authorize]
         [HttpGet("{id:Guid}", Name = "ReadTicketById")]
@@ -147,7 +197,7 @@ namespace FittimePanelApi.Controllers
         {
             try
             {
-                var ticket = await _unitOfWork.Tickets.Get(q => q.Id == id, new List<string> { "TicketMessages" , "TicketStatuses" });
+                var ticket = await _unitOfWork.Tickets.Get(q => q.Id == id, new List<string> { "TicketMessages" , "TicketStatuses", "TicketMessages.User" });
                 var result = _mapper.Map<TicketDTO>(ticket);
                 return Ok(result);
             }
@@ -174,6 +224,17 @@ namespace FittimePanelApi.Controllers
 
             try
             {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var roles = await _userManager.GetRolesAsync(currentUser);
+
+                SimpleCaptcha yourFirstCaptcha = new SimpleCaptcha();
+                bool isHuman = yourFirstCaptcha.Validate(createNewTicketMessageDTO.UserEnteredCaptchaCode, createNewTicketMessageDTO.CaptchaId);
+                if (!isHuman && roles.Contains("User"))
+                {
+                    _logger.LogError($"Invalid Captcha entered {nameof(New)}");
+                    return BadRequest($"Invalid Captcha entered {nameof(New)}");
+                }
+
                 var ticket = await _unitOfWork.Tickets.Get(q => q.Id == id);
                 if (ticket == null)
                 {
@@ -182,9 +243,24 @@ namespace FittimePanelApi.Controllers
                 }
 
                 var ticketMessage = _mapper.Map<TicketMessage>(createNewTicketMessageDTO);
-                var currentUser = await _userManager.GetUserAsync(User);
                 ticketMessage.User = currentUser;
                 ticket.TicketMessages.Add(ticketMessage);
+                if (roles.Contains("Administrator"))
+                {
+                    ticket.TicketStatuses.Add(new TicketStatus()
+                    {
+                        Status = 2,
+                        Text = "پاسخ داده شده"
+                    });
+                }
+                if (roles.Contains("User"))
+                {
+                    ticket.TicketStatuses.Add(new TicketStatus()
+                    {
+                        Status = 1,
+                        Text = "در انتظار پاسخ"
+                    });
+                }
                 _unitOfWork.Tickets.Update(ticket);
                 await _unitOfWork.Save();
 

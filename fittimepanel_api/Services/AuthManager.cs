@@ -25,20 +25,24 @@ namespace FittimePanelApi.Services
             _configuration = configuration;
         }
 
-        public async Task<string> CreateToken()
+        public async Task<string> CreateToken(bool rememberMe)
         {
             var signingCredentials = GetSigningCredentials();
             var claims = await GetClaims();
-            var token = GenerateTokenOptions(signingCredentials, claims);
+            var token = GenerateTokenOptions(signingCredentials, claims, rememberMe);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)
+        private JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims, bool rememberMe)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
-            var expiration = DateTime.Now.AddMinutes(Convert.ToDouble(
-                jwtSettings.GetSection("lifetime").Value));
+            DateTime expiration;
+            if (rememberMe)
+                expiration = DateTime.Now.AddDays(10);
+            else
+                expiration = DateTime.Now.AddMinutes(Convert.ToDouble(
+                    jwtSettings.GetSection("lifetime").Value));
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings.GetSection("Issuer").Value,

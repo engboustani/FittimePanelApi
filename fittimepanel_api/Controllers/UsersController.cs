@@ -7,26 +7,178 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FittimePanelApi;
 using FittimePanelApi.Data;
+using FittimePanelApi.IControllers;
+using Microsoft.AspNetCore.Authorization;
+using FittimePanelApi.IRepository;
+using Microsoft.Extensions.Logging;
+using AutoMapper;
+using Microsoft.AspNetCore.Identity;
+using FittimePanelApi.Models;
 
 namespace FittimePanelApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UsersController : ControllerBase
+    public class UsersController : ControllerBase, IUserController
     {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<UsersController> _logger;
+        private readonly IMapper _mapper;
+        private readonly UserManager<User> _userManager;
         private readonly AppDb _context;
 
-        public UsersController(AppDb context)
+        public UsersController(UserManager<User> userManager
+                                , IUnitOfWork unitOfWork
+                                , ILogger<UsersController> logger
+                                , IMapper mapper
+                                , AppDb context)
         {
+            _userManager = userManager;
+            _unitOfWork = unitOfWork;
+            _logger = logger;
+            _mapper = mapper;
             _context = context;
         }
 
-        //// GET: api/Users
-        //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<User>>> GetUsers()
-        //{
-        //    return await _context.Users.ToListAsync();
-        //}
+        // DELETE: api/Users/{id}
+        [Authorize(Policy = "DeleteUsers")]
+        [HttpDelete("{id:Guid}")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteById(Guid id)
+        {
+            try
+            {
+                var exercise = await _unitOfWork.Users.Get(q => q.Id == id.ToString());
+                if (exercise == null)
+                {
+                    _logger.LogError($"Invalid DELETE attempt in {nameof(DeleteById)}");
+                    return BadRequest("Submitted data is invalid");
+                }
+
+                await _unitOfWork.Users.Delete(id);
+                await _unitOfWork.Save();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(DeleteById)}");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+            }
+
+        }
+
+        // GET: api/Users
+        [Authorize(Policy = "GetAllUsers")]
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ReadAll([FromQuery] QueryParamsDTO qp)
+        {
+            try
+            {
+                var users = _unitOfWork.Users.GetPage(
+                    page: qp.Page,
+                    itemsPerPage: qp.ItemsPerPage);
+                await users.ToListAsync();
+                var result = _mapper.Map<UserPageItemDTO>(users);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went wrong in the {nameof(ReadAll)}");
+                return StatusCode(500, "Internal Server Error, Please try again later.");
+            }
+        }
+
+        // GET: api/Users/Count
+        [Authorize(Policy = "GetAllUsers")]
+        [HttpGet("Count/{timespan}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountRegistrations(string timespan)
+        {
+            try
+            {
+                IQueryable results;
+                if (timespan == "month")
+                    results = from user in _context.Users
+                              where user.RegistrationDate > DateTime.Today.AddYears(-1)
+                              group user by user.RegistrationDate.Month into day
+                              select new
+                              {
+                                  Day = day.Key,
+                                  Count = day.Count(),
+                              };
+                else
+                    results = from user in _context.Users
+                              where user.RegistrationDate > DateTime.Today.AddDays(-7)
+                              group user by user.RegistrationDate.Date into day
+                              select new
+                              {
+                                  Day = day.Key,
+                                  Count = day.Count(),
+                              };
+
+                return Ok(results);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went wrong in the {nameof(CountRegistrations)}");
+                return StatusCode(500, "Internal Server Error, Please try again later.");
+            }
+        }
+
+        // GET: api/Users/Search/{query}
+        [Authorize(Policy = "GetAllUsers")]
+        [HttpGet("Search/{query}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> SearchAll([FromQuery] QueryParamsDTO qp, string query)
+        {
+            try
+            {
+                var users = _unitOfWork.Users.GetPage(u =>
+                       EF.Functions.Like(u.UserName, $"%{query}%")
+                    || EF.Functions.Like(u.FirstName, $"%{query}%")
+                    || EF.Functions.Like(u.LastName, $"%{query}%"),
+                        page: qp.Page,
+                        itemsPerPage: qp.ItemsPerPage);
+                await users.ToListAsync();
+                var result = _mapper.Map<UserPageItemDTO>(users);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went wrong in the {nameof(SearchAll)}");
+                return StatusCode(500, "Internal Server Error, Please try again later.");
+            }
+        }
+
+        // GET: api/Users/{id}
+        [Authorize]
+        [HttpGet("{id:Guid}", Name = "ReadUserById")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ReadById(Guid id)
+        {
+            try
+            {
+                var user = await _unitOfWork.Users.Get(q => q.Id == id.ToString(), new List<string> {
+                    "UserMetas"
+                });
+                var result = _mapper.Map<UserProfileDTO>(user);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(ReadById)}");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+            }
+        }
 
         //// GET: api/Users/5
         //[HttpGet("{id}")]

@@ -13,6 +13,8 @@ namespace FittimePanelApi.Models
         [Required]
         [StringLength(15, ErrorMessage = "Your Password is limited to {2} to {1} characters", MinimumLength = 6)]
         public string Password { get; set; }
+        [Required]
+        public bool RememberMe { get; set; }
     }
 
     public class UserDTO : LoginUserDTO
@@ -26,5 +28,24 @@ namespace FittimePanelApi.Models
         public string LastName { get; set; }
         public ICollection<string> Roles { get; set; }
 
+    }
+
+    public class ForgotPasswordDTO
+    {
+        [Required]
+        public string UserName { get; set; }
+        [Required]
+        public string PhoneNumber { get; set; }
+    }
+
+    public class ResetPasswordDTO
+    {
+        [Required]
+        public string UserName { get; set; }
+        [Required]
+        public string Token { get; set; }
+        [Required]
+        [StringLength(15, ErrorMessage = "Your Password is limited to {2} to {1} characters", MinimumLength = 6)]
+        public string Password { get; set; }
     }
 }

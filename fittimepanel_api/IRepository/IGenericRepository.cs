@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FittimePanelApi.Repository;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -20,5 +21,10 @@ namespace FittimePanelApi.IRepository
         Task Delete(Guid id);
         void DeleteRange(IEnumerable<T> entities);
         void Update(T entity);
+        void UpdateRange(IEnumerable<T> entities);
+        Task<int> Count(
+            Expression<Func<T, bool>> expression = null
+        );
+        Paginated<T> GetPage(Expression<Func<T, bool>> expression = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, List<string> includes = null, int page = 1, int itemsPerPage = 10);
     }
 }

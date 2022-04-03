@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using FittimePanelApi.Data;
 using FittimePanelApi.IControllers;
+using FittimePanelApi.INotifications;
 using FittimePanelApi.IRepository;
 using FittimePanelApi.Models;
+using FittimePanelApi.Models.Notifications;
 using ImageProcessor;
 using ImageProcessor.Plugins.WebP.Imaging.Formats;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,16 +29,20 @@ namespace FittimePanelApi.Controllers
         private readonly ILogger<ExercisesController> _logger;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
+        private readonly ISmsPanel _smsPanel;
+
 
         public ExercisesController(UserManager<User> userManager
                                 , IUnitOfWork unitOfWork
                                 , ILogger<ExercisesController> logger
-                                , IMapper mapper)
+                                , IMapper mapper
+                                , ISmsPanel smsPanel)
         {
             _userManager = userManager;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _smsPanel = smsPanel;
         }
 
         // DELETE: api/Exercises/<uuid>
@@ -86,12 +93,34 @@ namespace FittimePanelApi.Controllers
                 var exercise = _mapper.Map<Exercise>(createExerciseDTO);
                 var currentUser = await _userManager.GetUserAsync(User);
                 exercise.UserStudent = currentUser;
-                
+                var blobs = exercise.ExerciseBlobs;
+                exercise.ExerciseBlobs = null;
+                ICollection<ExerciseBlob> blobrecords = new Collection<ExerciseBlob>();
                 //var type = await _unitOfWork.ExerciseTypes.Get(q => q.Id == createExerciseDTO.ExerciseType.Id);
                 //exercise.ExerciseType = type;
 
+
                 await _unitOfWork.Exercises.Insert(exercise);
+                foreach (var blob in blobs)
+                {
+                    var blobrecord = await _unitOfWork.ExerciseBlobs.Get(b => b.Id == blob.Id);
+                    blobrecord.Exercise = exercise;
+                    _unitOfWork.ExerciseBlobs.Update(blobrecord);
+                }
                 await _unitOfWork.Save();
+
+                try
+                {
+                    await _smsPanel.SendSMS(new SendSmsDTO()
+                    {
+                        To = new string[] { currentUser.PhoneNumber },
+                        Text = String.Format("{0} عزیز! درخواست برنامه شما به موفقیت ایجاد شد. فیت تایم", currentUser.FullName)
+                    });
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError(ex, $"Cant send sms");
+                }
 
                 return CreatedAtRoute("ReadExerciseById", new { id = exercise.Id }, exercise);
             }
@@ -121,6 +150,31 @@ namespace FittimePanelApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Something went wrong in the {nameof(ReadAll)}");
+                return StatusCode(500, "Internal Server Error, Please try again later.");
+            }
+        }
+
+        // GET: api/Exercises/All
+        [Authorize(Policy = "GetAllExercises")]
+        [HttpGet("All", Name = "ReadAllExercieses")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ReadAllExercieses([FromQuery] QueryParamsDTO qp)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var exercises = _unitOfWork.Exercises.GetPage(
+                    includes: new List<string> { "ExerciseType", "Payments", "UserStudent" },
+                    page: qp.Page,
+                    itemsPerPage: qp.ItemsPerPage);
+                await exercises.ToListAsync();
+                var result = _mapper.Map<ExercisePageAllItemDTO>(exercises);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went wrong in the {nameof(ReadAllExercieses)}");
                 return StatusCode(500, "Internal Server Error, Please try again later.");
             }
         }
@@ -202,6 +256,52 @@ namespace FittimePanelApi.Controllers
             {
                 _logger.LogError(ex, $"Something Went Wrong in the {nameof(AddOrUpdateBlob)}");
                 return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+            }
+        }
+
+        // GET: api/Exercises/blob/{id}
+        [HttpGet("blob/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ReadBlob(string id)
+        {
+            try
+            {
+                var exerciseBlob = await _unitOfWork.ExerciseBlobs.Get(b => b.Id == Guid.Parse(id));
+                if (exerciseBlob == null)
+                    return NoContent();
+                var result = exerciseBlob.Value;
+
+                return File(result, "image/webp");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went wrong in the {nameof(ReadBlob)}");
+                return StatusCode(500, "Internal Server Error, Please try again later.");
+            }
+        }
+
+        // GET: api/Exercises/download/{id}
+        [HttpGet("download/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ReadDownload(string id)
+        {
+            try
+            {
+                var exerciseDownload = await _unitOfWork.ExerciseDownloads.Get(b => b.Id == Guid.Parse(id));
+                if (exerciseDownload == null)
+                    return NoContent();
+                var result = exerciseDownload.Value;
+
+                return File(result, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went wrong in the {nameof(ReadBlob)}");
+                return StatusCode(500, "Internal Server Error, Please try again later.");
             }
         }
 

@@ -1,3 +1,4 @@
+using BotDetect.Web;
 using FittimePanelApi.Configuration;
 using FittimePanelApi.Data;
 using FittimePanelApi.INotifications;
@@ -5,10 +6,12 @@ using FittimePanelApi.IRepository;
 using FittimePanelApi.Notifications;
 using FittimePanelApi.Repository;
 using FittimePanelApi.Services;
+using JSNLog;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -47,6 +50,25 @@ namespace FittimePanelApi
             );
 
             services.AddAuthentication();
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("DeleteUsers", policy =>
+                    policy.RequireRole("Administrator")
+                );
+                options.AddPolicy("GetAllUsers", policy =>
+                    policy.RequireRole("Administrator")
+                );
+                options.AddPolicy("GetAllTickets", policy =>
+                    policy.RequireRole("Administrator")
+                );
+                options.AddPolicy("GetAllExercises", policy =>
+                    policy.RequireRole("Administrator")
+                );
+                options.AddPolicy("GetAllPayments", policy =>
+                    policy.RequireRole("Administrator")
+                );
+            });
+
             services.ConfigureIdentity();
             services.ConfigureJWT(Configuration);
 
@@ -70,10 +92,10 @@ namespace FittimePanelApi
             services.AddTransient<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IAuthManager, AuthManager>();
 
+            services.ConfigureRestClient();
             services.ConfigureSmsPanel();
-            //services.ConfigureIDPay();
-            services.ConfigurePayir();
-
+            services.ConfigurePaymentGetaways();
+            services.ConfigureURLShortening();
 
             services.AddSwaggerGen(c =>
             {
@@ -89,10 +111,21 @@ namespace FittimePanelApi
                     .EnableDetailedErrors()       // <-- with debugging (remove for production).
             );
 
+            // Comment the next line if your app is running on the .NET Core 2.0
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+            services.AddMemoryCache(); // Adds a default in-memory 
+                                       // implementation of 
+                                       // IDistributedCache
+
+            services.Configure<IISServerOptions>(options =>
+            {
+                options.AllowSynchronousIO = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -125,10 +158,33 @@ namespace FittimePanelApi
             app.UseAuthentication();
             app.UseAuthorization();
 
+            // configure your application pipeline to use SimpleCaptcha middleware
+            app.UseSimpleCaptcha(Configuration.GetSection("BotDetect"));
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
+
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+                await next();
+            });
+
+            var corsAllowedOriginsRegex = @"^http?:\/\/localhost:[0-9]{1,5}\/([-a-zA-Z0-9()@:%_\+.~#?&\/=]*)";
+            if (env.IsProduction())
+            {
+                corsAllowedOriginsRegex = @"^((https?:\/\/)?.*?([\w\d-]*\.[\w\d]+))($|\/.*$)";
+            }
+
+            // Configure JSNLog
+            var jsnlogConfiguration =
+                  new JsnlogConfiguration
+                  {
+                      corsAllowedOriginsRegex = corsAllowedOriginsRegex,
+                  };
+            app.UseJSNLog(new LoggingAdapter(loggerFactory), jsnlogConfiguration);
         }
 
         private string ConnectionString()

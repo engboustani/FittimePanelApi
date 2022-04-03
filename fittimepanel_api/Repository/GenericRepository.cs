@@ -20,6 +20,18 @@ namespace FittimePanelApi.Repository
             _db = _context.Set<T>();
         }
 
+        public async Task<int> Count(Expression<Func<T, bool>> expression = null)
+        {
+            IQueryable<T> query = _db;
+
+            if (expression != null)
+            {
+                query = query.Where(expression);
+            }
+
+            return await query.CountAsync();
+        }
+
         public async Task Delete(int id)
         {
             var entity = await _db.FindAsync(id);
@@ -76,6 +88,33 @@ namespace FittimePanelApi.Repository
             return await query.AsNoTracking().ToListAsync();
         }
 
+        public Paginated<T> GetPage(Expression<Func<T, bool>> expression = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, List<string> includes = null, int page = 1, int itemsPerPage = 10)
+        {
+            IQueryable<T> query = _db;
+
+            if (expression != null)
+            {
+                query = query.Where(expression);
+            }
+
+            if (includes != null)
+            {
+                foreach (var includePropery in includes)
+                {
+                    query = query.Include(includePropery);
+                }
+            }
+
+            if (orderBy != null)
+            {
+                query = orderBy(query);
+            }
+
+            //return await query.AsNoTracking().ToListAsync();
+            return Paginated<T>.ToPaginatedItem(
+                query, page, itemsPerPage);
+        }
+
         public async Task Insert(T entity)
         {
             await _db.AddAsync(entity);
@@ -90,6 +129,12 @@ namespace FittimePanelApi.Repository
         {
             _db.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
+        }
+
+        public void UpdateRange(IEnumerable<T> entities)
+        {
+            _db.AttachRange(entities);
+            _context.Entry(entities).State = EntityState.Modified;
         }
 
 

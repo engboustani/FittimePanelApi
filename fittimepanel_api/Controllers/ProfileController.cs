@@ -96,6 +96,7 @@ namespace FittimePanelApi.Controllers
                         {
                             imageFactory.Load(memoryStream.ToArray())
                                         .Format(new WebPFormat())
+                                        .Resize(new System.Drawing.Size(300, 300))
                                         .Quality(100)
                                         .Save(outStream);
 
@@ -157,6 +158,27 @@ namespace FittimePanelApi.Controllers
         }
 
         [Authorize]
+        [HttpGet("short")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ReadShortProfile()
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                var result = _mapper.Map<UserShortProfileDTO>(user);
+                result.Roles = (List<string>)await _userManager.GetRolesAsync(user);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(ReadShortProfile)}");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+            }
+        }
+
+        [Authorize]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -168,6 +190,41 @@ namespace FittimePanelApi.Controllers
                 var currentUser = await _userManager.GetUserAsync(User);
                 var user = await _unitOfWork.Users.Get(q => q == currentUser, new List<string> { "UserMetas" });
                 var result = _mapper.Map<UserProfileDTO>(user);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(GetProfile)}");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+            }
+        }
+
+        [Authorize]
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetUserProfile(string id)
+        {
+            try
+            {
+                var user = await _unitOfWork.Users.Get(q => q.Id == id, new List<string> { "UserMetas", "Exercises", "Exercises.ExerciseType", "Tickets", "Tickets.TicketStatuses" });
+                var result = _mapper.Map<UserProfileDetailDTO>(user);
+
+                int index = 0;
+                foreach (var ticket in result.Tickets)
+                {
+                    if (user.Tickets[index].TicketStatuses.Count == 0)
+                    {
+                        index++;
+                        continue;
+                    }
+                    var last_status = _mapper.Map<TicketStatusDTO>(user.Tickets[index].TicketStatuses.Last());
+                    ticket.LastStatus = last_status;
+                    index++;
+                }
+
 
                 return Ok(result);
             }

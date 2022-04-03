@@ -2,10 +2,13 @@
 using FittimePanelApi.Data;
 using FittimePanelApi.IControllers;
 using FittimePanelApi.IGetaways;
+using FittimePanelApi.INotifications;
 using FittimePanelApi.IRepository;
 using FittimePanelApi.Models;
 using FittimePanelApi.Models.Getaways;
+using FittimePanelApi.Models.Notifications;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,25 +22,34 @@ namespace FittimePanelApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PaymentController : ControllerBase, IPaymentController
+    public class PaymentsController : ControllerBase, IPaymentsController
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ExercisesController> _logger;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
-        private readonly IPayirGetaway _payir_getaway;
+        private readonly IPaymentGetaways _paymentGetaways;
+        private readonly ISmsPanel _smsPanel;
+        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly AppDb _context;
 
-        public PaymentController(UserManager<User> userManager
+        public PaymentsController(UserManager<User> userManager
                                 , IUnitOfWork unitOfWork
                                 , ILogger<ExercisesController> logger
                                 , IMapper mapper
-                                , IPayirGetaway payir_getaway)
+                                , IPaymentGetaways paymentGetaways
+                                , ISmsPanel smsPanel
+                                , IHostingEnvironment hostingEnvironment
+                                , AppDb context)
         {
             _userManager = userManager;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
-            _payir_getaway = payir_getaway;
+            _paymentGetaways = paymentGetaways;
+            _smsPanel = smsPanel;
+            _hostingEnvironment = hostingEnvironment;
+            _context = context;
         }
 
         // DELETE: api/Payments/<uuid>
@@ -83,71 +95,17 @@ namespace FittimePanelApi.Controllers
             try
             {
                 var payment = await _unitOfWork.Payments.Get(q => q.Id == id, new List<string> { "Exercise", "PaymentGetway", "User" });
-                ResponseLinkCreatedPayirDTO result = (ResponseLinkCreatedPayirDTO)await _payir_getaway.GetPayLink(payment);
-                if(result.status == 1)
+
+                var link = await _paymentGetaways.GetLink(payment);
+
+                return Ok(new PaymentLinkDTO()
                 {
-                    payment.Token = result.token;
-                    payment.Status = PaymentStatus.GoesToGetway;
-                    _unitOfWork.Payments.Update(payment);
-                    await _unitOfWork.Save();
-
-                    return Ok(new PaymentLinkDTO()
-                    {
-                        Link = String.Format("https://pay.ir/pg/{0}", payment.Token)
-                    });
-                }
-
-                return StatusCode(500, "Can't get token from payir.");
+                    Link = link
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Something went wrong in the {nameof(ReadAll)}");
-                return StatusCode(500, "Internal Server Error, Please try again later.");
-            }
-        }
-
-        // GET: api/Payment/callback/payir
-        [HttpGet("callback/payir")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> CallbackPayir([FromQuery] int status, [FromQuery] string token)
-        {
-            try
-            {
-                Payment payment;
-                if (status == 1)
-                {
-                    ResponseVerifyPayirDTO responseVerifyPayir = (ResponseVerifyPayirDTO)await _payir_getaway.Verify(token);
-                    if(responseVerifyPayir.status == 1)
-                    {
-                        string paymentId = responseVerifyPayir.factorNumber;
-                        payment = await _unitOfWork.Payments.Get(p => p.Id == Guid.Parse(paymentId));
-                        payment.Status = PaymentStatus.Successful;
-                        _unitOfWork.Payments.Update(payment);
-                        await _unitOfWork.Save();
-
-                        return Redirect(String.Format("http://localhost:8080/#/payment/{0}", payment.Id));
-                    }
-                    else
-                    {
-                        payment = await _unitOfWork.Payments.Get(p => p.Token == token);
-                        payment.Status = PaymentStatus.Failed;
-                        _unitOfWork.Payments.Update(payment);
-                        await _unitOfWork.Save();
-
-                        return Redirect(String.Format("http://localhost:8080/#/payment/{0}", payment.Id));
-                    }
-                }
-                payment = await _unitOfWork.Payments.Get(p => p.Token == token);
-                payment.Status = PaymentStatus.Failed;
-                _unitOfWork.Payments.Update(payment);
-                await _unitOfWork.Save();
-
-                return Redirect(String.Format("http://localhost:8080/#/payment/{0}", payment.Id));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Something went wrong in the {nameof(CallbackPayir)}");
                 return StatusCode(500, "Internal Server Error, Please try again later.");
             }
         }
@@ -229,6 +187,117 @@ namespace FittimePanelApi.Controllers
             }
         }
 
+        // GET: api/Payments/Chart/{timespan}
+        [Authorize(Policy = "GetAllPayments")]
+        [HttpGet("Chart/{timespan}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ChartPayments(string timespan)
+        {
+            try
+            {
+                IQueryable results;
+                if (timespan == "month")
+                    results = from payment in _context.Payments
+                              where payment.CreatedDate > DateTime.Today.AddYears(-1)
+                              group payment by payment.CreatedDate.Month into day
+                              select new
+                              {
+                                  Time = day.Key,
+                                  Total = day.Sum(p => p.Amount),
+                              };
+                else
+                    results = from payment in _context.Payments
+                              where payment.CreatedDate > DateTime.Today.AddDays(-7)
+                              group payment by payment.CreatedDate.Date into day
+                              select new
+                              {
+                                  Time = day.Key,
+                                  Total = day.Sum(p => p.Amount),
+                              };
+
+                return Ok(results);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something went wrong in the {nameof(ChartPayments)}");
+                return StatusCode(500, "Internal Server Error, Please try again later.");
+            }
+        }
+
+        // GET: api/Payments/Discounts
+        [Authorize]
+        [HttpGet("Discounts", Name = "ReadDiscounts")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ReadDiscounts([FromQuery] QueryParamsDTO qp)
+        {
+            try
+            {
+                var paymentDiscounts = _unitOfWork.PaymentDiscounts.GetPage(
+                    page: qp.Page,
+                    itemsPerPage: qp.ItemsPerPage);
+                await paymentDiscounts.ToListAsync();
+                var result = _mapper.Map<PaymentDiscountPageAllItemDTO>(paymentDiscounts);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(ReadDiscountById)}");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+            }
+        }
+
+        // GET: api/Payments/Discounts/<uuid>
+        [Authorize]
+        [HttpGet("Discounts/{id:Guid}", Name = "ReadDiscountById")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ReadDiscountById(Guid id)
+        {
+            try
+            {
+                var paymentDiscount = await _unitOfWork.PaymentDiscounts.Get(q => q.Id == id, new List<string> { "Payments" });
+                var result = _mapper.Map<PaymentDiscountDTO>(paymentDiscount);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(ReadDiscountById)}");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+            }
+        }
+
+        // POST: api/Payments/Discounts
+        [Authorize]
+        [HttpPost("Discounts")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> NewDiscount([FromBody] CreatePaymentDiscountDTO createPaymentDiscountDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError($"Invalid POST attempt in {nameof(NewDiscount)}");
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var paymentDiscount = _mapper.Map<PaymentDiscount>(createPaymentDiscountDTO);
+
+                await _unitOfWork.PaymentDiscounts.Insert(paymentDiscount);
+                await _unitOfWork.Save();
+
+                return CreatedAtRoute("ReadDiscountById", new { id = paymentDiscount.Id }, paymentDiscount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(NewDiscount)}");
+                return StatusCode(500, "Internal Server Error. Please Try Again Later.");
+            }
+        }
 
     }
 }

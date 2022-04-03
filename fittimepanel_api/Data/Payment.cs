@@ -15,6 +15,12 @@ namespace FittimePanelApi.Data
         Failed = 3,
     }
 
+    public enum DiscountType : int
+    {
+        Discount = 0,
+        Percentage = 1,
+    }
+
     public class Payment : BaseEntity
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -28,6 +34,7 @@ namespace FittimePanelApi.Data
         public virtual PaymentGetaway PaymentGetway { get; set; }
         public PaymentStatus Status { get; set; }
         public string Token { get; set; }
+        public PaymentDiscount? Discount { get; set; }
     }
 
     public class PaymentGetaway : BaseEntity
@@ -44,5 +51,28 @@ namespace FittimePanelApi.Data
         public bool Enabled { get; set; }
         public virtual ICollection<Payment> Payments { get; set; }
     }
+
+    public class PaymentDiscount : BaseEntity
+    {
+        public PaymentDiscount()
+        {
+            Payments = new HashSet<Payment>();
+        }
+
+        [Key]
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public string Code { get; set; }
+        public bool Enabled { get; set; }
+        public int Percentage { get; set; }
+        public double Discount { get; set; }
+        public DiscountType DiscountType { get; set; }
+        public bool Limited { get; set; }
+        public int Limit { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime ExpireDate { get; set; }
+        public virtual ICollection<Payment> Payments { get; set; }
+    }
+
 
 }

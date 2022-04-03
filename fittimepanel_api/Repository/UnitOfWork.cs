@@ -15,11 +15,13 @@ namespace FittimePanelApi.Repository
         private IGenericRepository<Exercise> _exercises;
         private IGenericRepository<ExerciseType> _exerciseTypes;
         private IGenericRepository<ExerciseBlob> _exerciseBlobs;
+        private IGenericRepository<ExerciseDownload> _exerciseDownloads;
         private IGenericRepository<User> _users;
         private IGenericRepository<UserMeta> _userMetas;
         private IGenericRepository<UserBlob> _userBlobs;
         private IGenericRepository<Payment> _payments;
         private IGenericRepository<PaymentGetaway> _paymentGetaways;
+        private IGenericRepository<PaymentDiscount> _paymentDiscounts;
 
         public UnitOfWork(AppDb context)
         {
@@ -31,11 +33,13 @@ namespace FittimePanelApi.Repository
         public IGenericRepository<Exercise> Exercises => _exercises ??= new GenericRepository<Exercise>(_context);
         public IGenericRepository<ExerciseType> ExerciseTypes => _exerciseTypes ??= new GenericRepository<ExerciseType>(_context);
         public IGenericRepository<ExerciseBlob> ExerciseBlobs => _exerciseBlobs ??= new GenericRepository<ExerciseBlob>(_context);
+        public IGenericRepository<ExerciseDownload> ExerciseDownloads => _exerciseDownloads ??= new GenericRepository<ExerciseDownload>(_context);
         public IGenericRepository<User> Users => _users ??= new GenericRepository<User>(_context);
         public IGenericRepository<UserMeta> UserMetas => _userMetas ??= new GenericRepository<UserMeta>(_context);
         public IGenericRepository<UserBlob> UserBlobs => _userBlobs ??= new GenericRepository<UserBlob>(_context);
         public IGenericRepository<Payment> Payments => _payments ??= new GenericRepository<Payment>(_context);
         public IGenericRepository<PaymentGetaway> PaymentGetaways => _paymentGetaways ??= new GenericRepository<PaymentGetaway>(_context);
+        public IGenericRepository<PaymentDiscount> PaymentDiscounts => _paymentDiscounts ??= new GenericRepository<PaymentDiscount>(_context);
 
         public void Dispose()
         {

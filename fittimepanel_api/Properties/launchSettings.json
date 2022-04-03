@@ -15,11 +15,12 @@
       "launchUrl": "swagger",
       "environmentVariables": {
         "SMS_USER": "engboustani",
-        "IDPAY_KEY": "6a7f99eb-7c20-4412-a972-6dfb7cd253a4",
+        "IDPAY_KEY": "81713e16-7b88-4fc8-a691-57c59a8c3385",
+        "YUN_KEY": "665:rmda7abk12sc08o4s08k0gw8ksggg8w",
         "SMS_FROM": "50004001676333",
         "KEY": "63aa6b52-a9c4-4f92-9699-6843ed98134e",
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "PAYIR_KEY": "test",
+        "PAYIR_KEY": "89d894df591f7e4f0672cd21449365a9",
         "SMS_PASSWORD": "f6138g"
       }
     },

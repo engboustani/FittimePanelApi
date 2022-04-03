@@ -58,6 +58,7 @@ namespace FittimePanelApi.Controllers
             {
                 var user = _mapper.Map<User>(userDTO);
                 user.UserName = userDTO.UserName;
+                user.RegistrationDate = DateTime.Now;
                 var result = await _userManager.CreateAsync(user, userDTO.Password);
 
                 if (!result.Succeeded)
@@ -107,7 +108,19 @@ namespace FittimePanelApi.Controllers
                     return Unauthorized();
                 }
 
-                return Accepted(new { Token = await _authManager.CreateToken() });
+                try
+                {
+                    var user = await _userManager.FindByNameAsync(userDTO.UserName);
+                    user.LastLoginTime = DateTime.Now;
+                    await _userManager.UpdateAsync(user);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Can't update user for login time {nameof(Login)}");
+                    throw;
+                }
+
+                return Accepted(new { Token = await _authManager.CreateToken(userDTO.RememberMe) });
             }
             catch (Exception ex)
             {
@@ -141,6 +154,97 @@ namespace FittimePanelApi.Controllers
             }
             return EnglishNumbers;
         }
+
+        [HttpPost]
+        [Route("forgot")]
+        [ProducesResponseType(StatusCodes.Status202Accepted)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO forgotPasswordDTO)
+        {
+            _logger.LogInformation($"Forget Password Attempt for {forgotPasswordDTO.UserName} ");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var user = await _userManager.FindByNameAsync(forgotPasswordDTO.UserName);
+                if (user == null)
+                {
+                    _logger.LogError($"Something Went Wrong in the {nameof(ForgotPassword)} User not exist");
+                    return Problem($"Something Went Wrong in the {nameof(ForgotPassword)} User not exist", statusCode: 500);
+                }
+                if (user.PhoneNumber != forgotPasswordDTO.PhoneNumber)
+                {
+                    _logger.LogError($"Something Went Wrong in the {nameof(ForgotPassword)} Phone number wrong");
+                    return Problem($"Something Went Wrong in the {nameof(ForgotPassword)} Phone number wrong", statusCode: 500);
+                }
+
+                var token = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultPhoneProvider, "ResetPasswordPurpose");
+
+                try
+                {
+                    await _smsPanel.SendSMS(new SendSmsDTO()
+                    {
+                        To = new string[] { user.PhoneNumber },
+                        Text = String.Format("کد تغییر رمز عبور شما {0} می باشد. فیت تایم", token)
+                    });
+                }
+                catch (Exception ex) 
+                {
+                    _logger.LogError(ex, $"Can't send sms massages");
+                }
+                return Accepted();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(Register)}");
+                return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
+            }
+        }
+
+        [HttpPost]
+        [Route("reset")]
+        [ProducesResponseType(StatusCodes.Status202Accepted)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO resetPasswordDTO)
+        {
+            _logger.LogInformation($"Reset Password Attempt for {resetPasswordDTO.UserName} ");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var user = await _userManager.FindByNameAsync(resetPasswordDTO.UserName);
+                if (user == null)
+                {
+                    _logger.LogError($"Something Went Wrong in the {nameof(ResetPassword)} User not exist");
+                    return Problem($"Something Went Wrong in the {nameof(ResetPassword)} User not exist", statusCode: 500);
+                }
+                var tokenVerified = await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultPhoneProvider, "ResetPasswordPurpose", resetPasswordDTO.Token);
+                if (!tokenVerified)
+                    return UnprocessableEntity($"Something Went Wrong in the {nameof(ResetPassword)} Token not verified");
+
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var result = await _userManager.ResetPasswordAsync(user, token, resetPasswordDTO.Password);
+
+                if (!result.Succeeded)
+                    return UnprocessableEntity("Weak password");
+
+                return Accepted();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Something Went Wrong in the {nameof(ResetPassword)}");
+                return Problem($"Something Went Wrong in the {nameof(ResetPassword)}", statusCode: 500);
+            }
+        }
+
         private static bool CheckCodeMelli(string nationalCode)
         {
             bool result;

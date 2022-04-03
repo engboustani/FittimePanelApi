@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FittimePanelApi.IControllers
 {
-    public interface IPaymentController : IController<Payment>
+    public interface IPaymentsController : IController<Payment>
     {
     }
 }

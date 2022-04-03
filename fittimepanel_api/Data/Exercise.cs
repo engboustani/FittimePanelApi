@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using FittimePanelApi.Repository;
 
 namespace FittimePanelApi.Data
 {
@@ -62,6 +63,7 @@ namespace FittimePanelApi.Data
         public string Value { get; set; }
         public virtual User User { get; set; }
         public virtual Exercise Exercise { get; set; }
+        public string? Description { get; set; }
     }
 
     public class ExerciseBlob : BaseEntity
@@ -72,6 +74,7 @@ namespace FittimePanelApi.Data
         public byte[] Value { get; set; }
         public virtual User User { get; set; }
         public virtual Exercise Exercise { get; set; }
+        public string? Description { get; set; }
     }
 
     public class ExerciseDownload : BaseEntity
@@ -79,7 +82,10 @@ namespace FittimePanelApi.Data
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         public Guid Id { get; set; }
+        public virtual Guid ExerciseId { get; set; }
         public virtual Exercise Exercise { get; set; }
-        public string Uri { get; set; }
+        public string? Uri { get; set; }
+        public byte[] Value { get; set; }
+        public string? Description { get; set; }
     }
 }
